@@ -1,0 +1,9 @@
+def NormalizeURL(url):
+    return url
+
+def MetadataObjectForURL(url):
+    '''since this Service is only for video playback, I don't care about metadata at this time'''
+    return VideoClipObject()
+
+def MediaObjectsForURL(url):
+    return []
