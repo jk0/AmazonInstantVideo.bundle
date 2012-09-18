@@ -48,10 +48,10 @@ def MainMenu():
     #dir.Append(Function(DirectoryItem(SearchMenu, "Search")))
     
     #dir.Append(Function(DirectoryItem(Library, "Your Library")))
-    oc.add(DirectoryObject(Library), title="Your Library")
+    oc.add(DirectoryObject(key=Callback(Library), title="Your Library"))
 
     #dir.Append(PrefsItem(L('Preferences'), thumb=R(ICON)))
-    oc.add(PrefsObject, title=L("Preferences"), thumb=R(ICON))
+    oc.add(PrefsObject(title=L("Preferences"), thumb=R(ICON)))
     
     #return dir
     return oc
@@ -187,7 +187,7 @@ def LibrarySpecific(movies=True):
     
     for i in range(0, len(seasons)):
         #dir.Append(Function(DirectoryItem(TVIndividualSeason, title=seasons[i][0], thumb=Callback(Thumb, url=seasons[i][2] )), url="https://www.amazon.com/gp/product/" + seasons[i][1]))
-	oc.add(DirectoryObject(Key=Callback(TVIndividualSeason, url="https://www.amazon.com/gp/product/" + seasons[i][1]),
+	oc.add(DirectoryObject(key=Callback(TVIndividualSeason, url="https://www.amazon.com/gp/product/" + seasons[i][1]),
 		title=seasons[i][0],
 		thumb=Resource.ContentsOfURLWithFallback(url=seasons[i][2], fallback=ICON)))
 
@@ -295,7 +295,7 @@ def TVSubCategories(url=None, category=None, usedSelections=None):
     
     for i in range(0, len(listOfGenresLinks)):
         #dir.Append(Function(DirectoryItem(TVList, title=listOfGenresNames[i]), usedSelections=usedSelections, url=listOfGenresLinks[i]))
-	oc.add(DirectoryObjecy(key=Callback(TVList, usedSelections=usedSelections, url=listOfGenresLinks[i]), title=listOfGenresNames[i]))
+	oc.add(DirectoryObject(key=Callback(TVList, usedSelections=usedSelections, url=listOfGenresLinks[i]), title=listOfGenresNames[i]))
     
     #return dir
     return oc
@@ -445,7 +445,7 @@ def ResultsList(url = None, onePage=False, tvList = True, sort=False):
     if tvList:
         for i in range(0, len(sortedSeasonPairs)):
             #dir.Append(Function(DirectoryItem(TVIndividualSeason, title=sortedSeasonPairs[i][0], thumb=Callback(Thumb, url=sortedSeasonPairs[i][2] )), url=sortedSeasonPairs[i][1]))
-	    oc.add(DirectoryObject(key=Callback(TVIndividualSeason, url=sortedSeasonPairs[i][1]), title=sortedSeasonPairs[i][0], thumb=Callback(Thumb, url=sortedSeasonPairs[i][2]))
+	    oc.add(DirectoryObject(key=Callback(TVIndividualSeason, url=sortedSeasonPairs[i][1]), title=sortedSeasonPairs[i][0], thumb=Callback(Thumb, url=sortedSeasonPairs[i][2])))
     else:
         for i in range(0, len(sortedSeasonPairs)):
             #dir.Append(
@@ -502,12 +502,12 @@ def TVIndividualSeason(url = None):
 		EpisodeObject(
 			url="http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=" + listOfEpisodesASIN[i],
 		        title = listOfEpisodesTitles[i],
-		        summary = listOfEpisodesSummaries[i]
-			thumb = R(ICON) ###Check to see if there's an episode/season/series thumb accessible###
+		        summary = listOfEpisodesSummaries[i],
+			    thumb = R(ICON) ###Check to see if there's an episode/season/series thumb accessible###
 		)
 	)
-    
-    
+
+
     #return dir
     return oc
 

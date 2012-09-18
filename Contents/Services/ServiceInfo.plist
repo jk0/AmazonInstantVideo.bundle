@@ -4,17 +4,17 @@
 <dict>
     <key>PlexFrameworkFlags</key>
     <array>
-		<string>UseRealRTMP</string>
-	</array>
-	<key>URL</key>
-	<dict>
-		<key>Amazon Prime</key>
-		<dict>
-			<key>URLPatterns</key>
-			<array>
-				<string>http://www.amazon.com/gp/video/streaming/.*</string>
-			</array>
-		</dict>
-	</dict>
+        <string>UseRealRTMP</string>
+    </array>
+    <key>URL</key>
+    <dict>
+        <key>Amazon Prime</key>
+        <dict>
+            <key>URLPatterns</key>
+            <array>
+                <string>http://www.amazon.com/gp/video/streaming/.*</string>
+            </array>
+        </dict>
+    </dict>
 </dict>
 </plist>

@@ -6,7 +6,7 @@
                         windowWidth="1280"
                         windowHeight="720"
                         manualLock="true"
-                        identifier="com.plexapp.plugins.amazonvod"
+                        identifier="com.plexapp.plugins.amazonprime"
                         version="1.0">
 
     <crop x="0" y="0" width="1024" height="800" />
