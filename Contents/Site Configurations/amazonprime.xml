@@ -5,21 +5,12 @@
                         finalState="finished"
                         windowWidth="1280"
                         windowHeight="720"
+                        agent="Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_6; en-gb) AppleWebKit/528.16 (KHTML, like Gecko) Version/4.0 Safari/528.16"
                         manualLock="true"
                         identifier="com.plexapp.plugins.amazonprime"
                         version="1.0">
 
-    <crop x="0" y="0" width="1024" height="800" />
-
-
-    <seekbar type="javascript">
-        <percentComplete equals="($.getPlayheadTime()/$.getMetadata().duration)*100" />
-        <bigStep minus="$.setPlayheadTime($.getPlayheadTime()-30)" plus="$.setPlayheadTime($.getPlayheadTime()+30)" />
-        <smallStep minus="$.setPlayheadTime($.getPlayheadTime()-10)" plus="$.setPlayheadTime($.getPlayheadTime()+10)" />
-        <end condition="getPlayer().getState()==&quot;COMPLETE&quot;" />
-    </seekbar>
-
-
+    <crop x="0" y="0" width="0" height="0" />
 
     <state name="loginPage">
         <event>
