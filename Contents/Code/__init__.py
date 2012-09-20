@@ -14,6 +14,8 @@
 
 NAME = "Amazon Prime Instant Videos"
 ICON = "icon-default.png"
+ICON_SEARCH = "icon-search.png"
+ICON_PREFS = "icon-prefs.png"
 ART = "art-default.jpg"
 
 ASSOC_TAG = "plco09-20"
@@ -24,6 +26,7 @@ STREAM_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
 LIBRARY_URL = AMAZON_URL + "/gp/video/library/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
+SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
 
 
 def Login():
@@ -67,22 +70,26 @@ def MainMenu():
     oc.add(DirectoryObject(key=Callback(Browse, video_type="movies", match_pattern="//div[contains(@id, \"result_\")]"), title="Browse Movies"))
     oc.add(DirectoryObject(key=Callback(Browse, video_type="tv", match_pattern="//div[contains(@id, \"result_\")]"), title="Browse TV"))
     oc.add(DirectoryObject(key=Callback(Library), title="Your Library"))
-    oc.add(PrefsObject(title=L("Preferences"), thumb=R(ICON)))
+    oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(ICON_SEARCH)))
+    oc.add(PrefsObject(title=L("Preferences"), thumb=R(ICON_PREFS)))
 
     return oc
 
 
-def Library():
+def SearchMenu():
     oc = ObjectContainer()
 
-    oc.add(DirectoryObject(key=Callback(Browse, video_type="movies", match_pattern="//*[@class=\"lib-item\"]", is_library=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(Browse, video_type="tv", match_pattern="//*[@class=\"lib-item\"]", is_library=True), title="TV"))
+    oc.add(InputDirectoryObject(key=Callback(Search, video_type="movies"), title="Search Movies", prompt="Search for a Movie", thumb=R(ICON_SEARCH)))
+    oc.add(InputDirectoryObject(key=Callback(Search, video_type="tv"), title="Search TV", prompt="Search for a TV show", thumb=R(ICON_SEARCH)))
 
     return oc
 
 
-def Browse(video_type, match_pattern, is_library=False):
-    if is_library:
+def Browse(video_type, match_pattern, is_library=False, query=None):
+    if query:
+        query = query.replace(" ", "%20")
+        browse_url = SEARCH_URL % query
+    elif is_library:
         browse_url = LIBRARY_URL % video_type
     elif video_type == "movies":
         browse_url = MOVIES_URL
@@ -105,6 +112,10 @@ def Browse(video_type, match_pattern, is_library=False):
             item_asin = item.attrib["asin"].strip()
             item_title = list(item)[1][0].text.strip()
             item_image_link = list(item)[0][0][0].attrib["src"].strip()
+        elif query:
+            item_asin = item.attrib["name"].strip()
+            item_title = list(item)[1][0][0].text.strip()
+            item_image_link = list(item)[0][0][0].attrib["src"].strip()
         else:
             item_asin = item.attrib["name"].strip()
             item_title = list(item)[2][0][0].text.strip()
@@ -114,6 +125,9 @@ def Browse(video_type, match_pattern, is_library=False):
             videos.append((item_title, item_asin, item_image_link))
         else:
             seasons.append((item_title, item_asin, item_image_link))
+
+    if query and (len(videos) == 0 and len(seasons) == 0):
+        return MessageContainer("No Results", "No results were found for '%s'." % query)
 
     oc = ObjectContainer()
 
@@ -137,6 +151,19 @@ def Browse(video_type, match_pattern, is_library=False):
         oc.add(DirectoryObject(key=Callback(TVSeason, season_url=season_url, season_thumb_url=season[2], verify_ownership=verify_ownership), title=season[0], thumb=thumb))
 
     return oc
+
+
+def Library():
+    oc = ObjectContainer()
+
+    oc.add(DirectoryObject(key=Callback(Browse, video_type="movies", match_pattern="//*[@class=\"lib-item\"]", is_library=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(Browse, video_type="tv", match_pattern="//*[@class=\"lib-item\"]", is_library=True), title="TV"))
+
+    return oc
+
+
+def Search(query, video_type):
+    return Browse(video_type=video_type, match_pattern="//div[contains(@id, \"result_\")]", query=query)
 
 
 def TVSeason(season_url, season_thumb_url, verify_ownership):
