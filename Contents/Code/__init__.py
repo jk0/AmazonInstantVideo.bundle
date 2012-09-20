@@ -12,13 +12,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import account
+
+
 NAME = "Amazon Prime Instant Videos"
 ICON = "icon-default.png"
 ICON_SEARCH = "icon-search.png"
 ICON_PREFS = "icon-prefs.png"
 ART = "art-default.jpg"
-
-ASSOC_TAG = "plco09-20"
 
 AMAZON_URL = "https://www.amazon.com"
 STREAM_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
@@ -27,28 +28,6 @@ LIBRARY_URL = AMAZON_URL + "/gp/video/library/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
-
-
-def Login():
-    x = HTTP.Request(AMAZON_URL + "/?tag=%s" % ASSOC_TAG, errors="replace")
-    x = HTTP.Request(AMAZON_URL + "/gp/sign-in.html?tag=%s" % ASSOC_TAG, errors="replace")
-
-    cookies_url = AMAZON_URL + "/gp/sign-in.html?tag=%s" % ASSOC_TAG
-    cookies = HTTP.CookiesForURL(cookies_url)
-
-    params = {
-        "path": "/gp/homepage.html",
-        "useRedirectOnSuccess": "1",
-        "protocol": "https",
-        "sessionId": None,
-        "action": "sign-in",
-        "password": Prefs["password"],
-        "email": Prefs["username"],
-        "x": '62',
-        "y": '11'
-    }
-
-    x = HTTP.Request(AMAZON_URL + "/gp/flex/sign-in/select.html?ie=UTF8&protocol=https&tag=%s" % ASSOC_TAG, values=params, errors="replace", immediate=True).headers
 
 
 def Start():
@@ -63,14 +42,20 @@ def Start():
 
 
 def MainMenu():
-    Login()
+    logged_in = account.logged_in()
+    if not logged_in:
+        logged_in = account.authenticate(AMAZON_URL)
 
     oc = ObjectContainer()
 
-    oc.add(DirectoryObject(key=Callback(Browse, video_type="movies", match_pattern="//div[contains(@id, \"result_\")]"), title="Browse Movies"))
-    oc.add(DirectoryObject(key=Callback(Browse, video_type="tv", match_pattern="//div[contains(@id, \"result_\")]"), title="Browse TV"))
-    oc.add(DirectoryObject(key=Callback(Library), title="Your Library"))
-    oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(ICON_SEARCH)))
+    if logged_in:
+        match_pattern = "//div[contains(@id, \"result_\")]"
+
+        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", match_pattern=match_pattern), title="Browse Movies"))
+        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", match_pattern=match_pattern), title="Browse TV"))
+        oc.add(DirectoryObject(key=Callback(LibraryMenu), title="Your Library"))
+        oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(ICON_SEARCH)))
+
     oc.add(PrefsObject(title=L("Preferences"), thumb=R(ICON_PREFS)))
 
     return oc
@@ -85,7 +70,7 @@ def SearchMenu():
     return oc
 
 
-def Browse(video_type, match_pattern, is_library=False, query=None):
+def BrowseMenu(video_type, match_pattern, is_library=False, query=None):
     if query:
         query = query.replace(" ", "%20")
         browse_url = SEARCH_URL % query
@@ -153,17 +138,19 @@ def Browse(video_type, match_pattern, is_library=False, query=None):
     return oc
 
 
-def Library():
+def LibraryMenu():
+    match_pattern = "//*[@class=\"lib-item\"]"
+
     oc = ObjectContainer()
 
-    oc.add(DirectoryObject(key=Callback(Browse, video_type="movies", match_pattern="//*[@class=\"lib-item\"]", is_library=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(Browse, video_type="tv", match_pattern="//*[@class=\"lib-item\"]", is_library=True), title="TV"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", match_pattern=match_pattern, is_library=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", match_pattern=match_pattern, is_library=True), title="TV"))
 
     return oc
 
 
 def Search(query, video_type):
-    return Browse(video_type=video_type, match_pattern="//div[contains(@id, \"result_\")]", query=query)
+    return BrowseMenu(video_type=video_type, match_pattern="//div[contains(@id, \"result_\")]", query=query)
 
 
 def TVSeason(season_url, season_thumb_url, verify_ownership):
