@@ -103,7 +103,7 @@ def BrowseMenu(video_type, match_pattern, is_library=False, query=None):
             item_image_link = list(item)[0][0][0].attrib["src"].strip()
         else:
             item_asin = item.attrib["name"].strip()
-            item_title = list(item)[2][0][0].text.strip()
+            item_title = list(item)[3][0][0].text.strip()
             item_image_link = list(item)[1][0][0].attrib["src"].strip()
 
         if video_type == "movies":
