@@ -16,11 +16,11 @@ import account
 import utils
 
 
-NAME = "Amazon Prime Instant Videos"
-ICON = "icon-default.png"
-ICON_SEARCH = "icon-search.png"
-ICON_PREFS = "icon-prefs.png"
-ART = "art-default.jpg"
+PLUGIN_TITLE = "Amazon Prime Instant Videos"
+PLUGIN_ICON_DEFAULT = "icon-default.png"
+PLUGIN_ICON_SEARCH = "icon-search.png"
+PLUGIN_ICON_PREFS = "icon-prefs.png"
+PLUGIN_ART = "art-default.jpg"
 
 AMAZON_URL = "https://www.amazon.com"
 STREAM_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
@@ -30,18 +30,21 @@ MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A28589050
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
 
+BROWSE_PATTERN = "//div[contains(@id, \"result_\")]"
+LIBRARY_PATTERN = "//*[@class=\"lib-item\"]"
+
 
 def Start():
-    Plugin.AddPrefixHandler("/video/amazonprime", MainMenu, NAME, ICON, ART)
-    Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
+    ObjectContainer.title1 = PLUGIN_TITLE
+    ObjectContainer.art = R(PLUGIN_ART)
 
-    ObjectContainer.title1 = NAME
-    ObjectContainer.art = R(ART)
-    ObjectContainer.view_group = "List"
+    DirectoryObject.thumb = R(PLUGIN_ICON_DEFAULT)
+    VideoClipObject.thumb = R(PLUGIN_ICON_DEFAULT)
+    InputDirectoryObject.thumb = R(PLUGIN_ICON_SEARCH)
+    PrefsObject.thumb = R(PLUGIN_ICON_PREFS)
 
-    DirectoryObject.thumb = R(ICON)
 
-
+@handler("/video/amazonprime", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
 def MainMenu():
     logged_in = account.logged_in()
     if not logged_in:
@@ -50,32 +53,35 @@ def MainMenu():
     oc = ObjectContainer()
 
     if logged_in:
-        match_pattern = "//div[contains(@id, \"result_\")]"
-
-        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", match_pattern=match_pattern), title="Browse Movies"))
-        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", match_pattern=match_pattern), title="Browse TV"))
+        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies"), title="Browse Movies"))
+        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv"), title="Browse TV"))
         oc.add(DirectoryObject(key=Callback(LibraryMenu), title="Your Library"))
-        oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(ICON_SEARCH)))
+        oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(PLUGIN_ICON_SEARCH)))
 
-    oc.add(PrefsObject(title=L("Preferences"), thumb=R(ICON_PREFS)))
+    oc.add(PrefsObject(title="Preferences"))
 
     return oc
 
 
+@route("/video/amazonprime/searchmenu")
 def SearchMenu():
     oc = ObjectContainer()
 
-    oc.add(InputDirectoryObject(key=Callback(Search, video_type="movies"), title="Search Movies", prompt="Search for a Movie", thumb=R(ICON_SEARCH)))
-    oc.add(InputDirectoryObject(key=Callback(Search, video_type="tv"), title="Search TV", prompt="Search for a TV show", thumb=R(ICON_SEARCH)))
+    oc.add(InputDirectoryObject(key=Callback(Search, video_type="movies"), title="Search Movies", prompt="Search for a Movie"))
+    oc.add(InputDirectoryObject(key=Callback(Search, video_type="tv"), title="Search TV", prompt="Search for a TV show"))
 
     return oc
 
 
-def BrowseMenu(video_type, match_pattern, is_library=False, query=None):
+@route("/video/amazonprime/browsemenu")
+def BrowseMenu(video_type, is_library=False, query=None):
+    match_pattern = BROWSE_PATTERN
+
     if query:
         query = query.replace(" ", "%20")
         browse_url = SEARCH_URL % query
     elif is_library:
+        match_pattern = LIBRARY_PATTERN
         browse_url = LIBRARY_URL % video_type
     elif video_type == "movies":
         browse_url = MOVIES_URL
@@ -132,28 +138,29 @@ def BrowseMenu(video_type, match_pattern, is_library=False, query=None):
     for season in seasons:
         season_url = AMAZON_URL + "/gp/product/" + season[1]
 
-        thumb = Resource.ContentsOfURLWithFallback(url=season[2], fallback=ICON)
+        thumb = Resource.ContentsOfURLWithFallback(url=season[2], fallback=PLUGIN_ICON_DEFAULT)
 
         oc.add(DirectoryObject(key=Callback(TVSeason, season_url=season_url, season_thumb_url=season[2], verify_ownership=verify_ownership), title=season[0], thumb=thumb))
 
     return oc
 
 
+@route("/video/amazonprime/librarymenu")
 def LibraryMenu():
-    match_pattern = "//*[@class=\"lib-item\"]"
-
     oc = ObjectContainer()
 
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", match_pattern=match_pattern, is_library=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", match_pattern=match_pattern, is_library=True), title="TV"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_library=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
 
     return oc
 
 
+@route("/video/amazonprime/search")
 def Search(query, video_type):
-    return BrowseMenu(video_type=video_type, match_pattern="//div[contains(@id, \"result_\")]", query=query)
+    return BrowseMenu(video_type=video_type, query=query)
 
 
+@route("/video/amazonprime/tvseason")
 def TVSeason(season_url, season_thumb_url, verify_ownership):
     html = HTML.ElementFromURL(season_url)
     episode_list = html.xpath("//*[@class=\"episodeRow\" or @class=\"episodeRow current\"]")
@@ -179,6 +186,34 @@ def TVSeason(season_url, season_thumb_url, verify_ownership):
     return oc
 
 
+@route("/video/amazonprime/getvideoobject")
+def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
+    thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=PLUGIN_ICON_DEFAULT)
+
+    if video_type == "episode":
+        return EpisodeObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
+    else:
+        return MovieObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
+
+
+@route("/video/amazonprime/videodetails")
+def VideoDetails(url):
+    oc = ObjectContainer()
+
+    oc.add(VideoClipObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url)))
+
+    return oc
+
+
+@route("/video/amazonprime/playvideo")
+@indirect
+def PlayVideo(url, bitrate):
+    flash_vars = utils.parse_flash_vars(url)
+    rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars, bitrate)
+
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
+
+
 def video_items(url):
     return [
         MediaObject(
@@ -202,28 +237,3 @@ def video_items(url):
             bitrate=348
         )
     ]
-
-
-def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
-    thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
-
-    if video_type == "episode":
-        return EpisodeObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
-    else:
-        return MovieObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
-
-
-def VideoDetails(url):
-    oc = ObjectContainer()
-
-    oc.add(VideoClipObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url)))
-
-    return oc
-
-
-@indirect
-def PlayVideo(url, bitrate):
-    flash_vars = utils.parse_flash_vars(url)
-    rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars, bitrate)
-
-    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
