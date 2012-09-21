@@ -5,11 +5,17 @@
     <key>CFBundleIdentifier</key>
     <string>com.plexapp.plugins.amazonprime</string>
     <key>PlexClientPlatforms</key>
-    <string>MacOSX,iOS</string>
+    <string>*</string>
+    <key>PlexClientPlatformExclusions</key>
+    <string>Roku</string>
     <key>PlexFrameworkVersion</key>
     <string>2</string>
     <key>PlexPluginMode</key>
     <string>AlwaysOn</string>
+    <key>PlexFrameworkFlags</key>
+    <array>
+        <string>UseRealRTMP</string>
+    </array>
     <key>PlexPluginRegions</key>
     <array>
         <string>US</string>

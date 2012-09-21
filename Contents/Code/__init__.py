@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 import account
+import utils
 
 
 NAME = "Amazon Prime Instant Videos"
@@ -178,10 +179,51 @@ def TVSeason(season_url, season_thumb_url, verify_ownership):
     return oc
 
 
+def video_items(url):
+    return [
+        MediaObject(
+            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=2500))],
+            bitrate=2500
+        ),
+        MediaObject(
+            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=1328))],
+            bitrate=1328
+        ),
+        MediaObject(
+            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=996))],
+            bitrate=996
+        ),
+        MediaObject(
+            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=664))],
+            bitrate=664
+        ),
+        MediaObject(
+            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=348))],
+            bitrate=348
+        )
+    ]
+
+
 def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
     thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 
     if video_type == "episode":
-        return EpisodeObject(key=WebVideoURL(url), rating_key=url, title=title, summary=summary, thumb=thumb)
+        return EpisodeObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
     else:
-        return MovieObject(key=WebVideoURL(url), rating_key=url, title=title, summary=summary, thumb=thumb)
+        return MovieObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
+
+
+def VideoDetails(url):
+    oc = ObjectContainer()
+
+    oc.add(VideoClipObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url)))
+
+    return oc
+
+
+@indirect
+def PlayVideo(url, bitrate):
+    flash_vars = utils.parse_flash_vars(url)
+    rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars, bitrate)
+
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
