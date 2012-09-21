@@ -57,26 +57,20 @@ def parse_flash_vars(url):
     return flash_vars
 
 
-def prepare_rtmp_info(flash_vars, bitrate):
-    bitrates = [348, 664, 996, 1328, 2500]
+def prepare_rtmp_info(flash_vars):
     stream_url = "https://atv-ps.amazon.com/cdp/catalog/GetStreamingUrlSets?format=json&version=%(version)s&asin=%(asin)s&deviceTypeID=%(deviceTypeID)s&xws-fa-ov=false&token=%(token)s&firmware=%(firmware)s&customerID=%(customerID)s&deviceID=%(deviceID)s" % flash_vars
 
     stream_data = JSON.ObjectFromURL(stream_url)
-    streams = stream_data["message"]["body"]["urlSets"]["streamingURLInfoSet"][0]["streamingURLInfo"]
+    stream_json = stream_data["message"]["body"]["urlSets"]["streamingURLInfoSet"][0]["streamingURLInfo"]
 
-    # TODO(jk0): Make this more readable.
-    index = bitrates.index(bitrate)
-    while index > -1:
-        try:
-            rtmp_url = streams[index]["url"]
-            try:
-                if streams[index]["drm"] != "":
-                    Log.Info("This video contains DRM and may not play.")
-            except:
-                pass
-            break
-        except:
-            index = index -1
+    streams = []
+    for stream in stream_json:
+        if stream["drm"] == "NONE":
+            streams.append((int(stream["bitrate"]), stream["url"]))
+
+    # NOTE(jk0): Use the highest bitrate available.
+    streams.sort(key=lambda x: x[0], reverse=True)
+    rtmp_url = streams[0][1]
 
     # NOTE(jk0): What?
     clip_stream = rtmp_url.split("ondemand/")[1].split("?")[0].replace(".mp4", "")

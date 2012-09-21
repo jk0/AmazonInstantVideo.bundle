@@ -207,33 +207,20 @@ def VideoDetails(url):
 
 @route("/video/amazonprime/playvideo")
 @indirect
-def PlayVideo(url, bitrate):
+def PlayVideo(url):
     flash_vars = utils.parse_flash_vars(url)
-    rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars, bitrate)
+    rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars)
 
-    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
+    oc = ObjectContainer()
+
+    oc.add(VideoClipObject(key=RTMPVideoURL(url=rtmp_url, clip=clip_stream)))
+
+    return oc
 
 
 def video_items(url):
     return [
         MediaObject(
-            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=2500))],
-            bitrate=2500
-        ),
-        MediaObject(
-            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=1328))],
-            bitrate=1328
-        ),
-        MediaObject(
-            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=996))],
-            bitrate=996
-        ),
-        MediaObject(
-            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=664))],
-            bitrate=664
-        ),
-        MediaObject(
-            parts=[PartObject(key=Callback(PlayVideo, url=url, bitrate=348))],
-            bitrate=348
+            parts=[PartObject(key=Callback(PlayVideo, url=url))],
         )
     ]
