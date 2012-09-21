@@ -23,15 +23,15 @@ PLUGIN_ICON_PREFS = "icon-prefs.png"
 PLUGIN_ART = "art-default.jpg"
 
 AMAZON_URL = "https://www.amazon.com"
-STREAM_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
+MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
 
 LIBRARY_URL = AMAZON_URL + "/gp/video/library/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
 
-BROWSE_PATTERN = "//div[contains(@id, \"result_\")]"
-LIBRARY_PATTERN = "//*[@class=\"lib-item\"]"
+BROWSE_PATTERN = "//div[contains(@id, 'result_')]"
+LIBRARY_PATTERN = "//*[@class='lib-item']"
 
 
 def Start():
@@ -96,22 +96,19 @@ def BrowseMenu(video_type, is_library=False, query=None):
     videos = []
     seasons = []
 
-    # NOTE(jk0): Determine whether or not we're looking at movies or TV shows
-    # which contain multiple episodes.
-    for item in video_list:
-        # TODO(jk0): Clean up this parsing mess.
+    for i, item in enumerate(video_list):
         if is_library:
-            item_asin = item.attrib["asin"].strip()
-            item_title = list(item)[1][0].text.strip()
-            item_image_link = list(item)[0][0][0].attrib["src"].strip()
+            item_asin = item.xpath("//@asin")[i]
+            item_title = item.xpath("//div[@class='title']/a/text()")[i]
+            item_image_link = item.xpath("//div[@class='img-container']/a/img/@src")[i]
         elif query:
-            item_asin = item.attrib["name"].strip()
-            item_title = list(item)[1][0][0].text.strip()
-            item_image_link = list(item)[0][0][0].attrib["src"].strip()
+            item_asin = item.xpath("//div[contains(@id, 'result_')]/@name")[i]
+            item_title = item.xpath("//h3[@class='newaps']/a/span/text()")[i]
+            item_image_link = item.xpath("//div[@class='image']/a/img/@src")[i]
         else:
-            item_asin = item.attrib["name"].strip()
-            item_title = list(item)[3][0][0].text.strip()
-            item_image_link = list(item)[1][0][0].attrib["src"].strip()
+            item_asin = item.xpath("//div[contains(@id, 'result_')]/@name")[i]
+            item_title = item.xpath("//div[@class='data']/h3/a/text()")[i]
+            item_image_link = item.xpath("//div[@class='image']/a/img/@src")[i]
 
         if video_type == "movies":
             videos.append((item_title, item_asin, item_image_link))
@@ -123,18 +120,14 @@ def BrowseMenu(video_type, is_library=False, query=None):
 
     oc = ObjectContainer()
 
-    # NOTE(jk0): Determine whether or not we're watching a movie or a TV show
-    # since they require different video object types.
     for video in videos:
-        video_url = STREAM_URL + video[1]
+        video_url = MINI_PLAYER_URL + video[1]
 
         if video_type == "movies":
             oc.add(GetVideoObject(url=video_url, video_type="movie", title=video[0], thumb_url=video[2]))
         else:
             oc.add(GetVideoObject(url=video_url, video_type="episode", title=video[0], thumb_url=video[2]))
 
-    # NOTE(jk0): TV shows contain multiple episodes, so handle them
-    # appropriately.
     for season in seasons:
         season_url = AMAZON_URL + "/gp/product/" + season[1]
 
@@ -163,23 +156,25 @@ def Search(query, video_type):
 @route("/video/amazonprime/tvseason")
 def TVSeason(season_url, season_thumb_url, verify_ownership):
     html = HTML.ElementFromURL(season_url)
-    episode_list = html.xpath("//*[@class=\"episodeRow\" or @class=\"episodeRow current\"]")
+    episode_list = html.xpath("//*[contains(@class, 'episodeRow')]")
 
     episodes = []
 
-    for episode in episode_list:
-        if not verify_ownership or list(episode)[7].text == "Owned":
-            # TODO(jk0): Clean up this parsing mess.
-            episode_asin = episode.xpath("@asin")[0].strip()
-            episode_title = episode.xpath("td/div/text()")[0].strip()
-            episode_summary = episode.xpath("td/div/text()")[1].strip()
+    for i, episode in enumerate(episode_list):
+        episode_owned = True if episode.xpath("//td[last()-2]/text()")[i] == "Owned" else False
+
+        # NOTE(jk0): Not sure why this was converted to a string?
+        if verify_ownership == "False" or episode_owned:
+            episode_asin = episode.xpath("//@asin")[i]
+            episode_title = episode.xpath("//td[@title]/div/text()")[i].strip()
+            episode_summary = episode.xpath("//td/div[contains(@style, 'overflow-y')]/text()")[i].strip()
 
             episodes.append((episode_asin, episode_title, episode_summary))
 
     oc = ObjectContainer()
 
     for episode in episodes:
-        episode_url = STREAM_URL + episode[0]
+        episode_url = MINI_PLAYER_URL + episode[0]
 
         oc.add(GetVideoObject(url=episode_url, video_type="episode", title=episode[1], summary=episode[2], thumb_url=season_thumb_url))
 
@@ -221,6 +216,8 @@ def PlayVideo(url):
 def video_items(url):
     return [
         MediaObject(
-            parts=[PartObject(key=Callback(PlayVideo, url=url))],
+            parts=[
+                PartObject(key=Callback(PlayVideo, url=url))
+            ]
         )
     ]
