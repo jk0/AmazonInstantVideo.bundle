@@ -25,12 +25,12 @@ PLUGIN_ART = "art-default.jpg"
 AMAZON_URL = "https://www.amazon.com"
 MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
 
-LIBRARY_URL = AMAZON_URL + "/gp/video/library/%s?show=all"
+ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
 
-BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //*[@class='lib-item']"
+BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
 PAGINATION_PATTERN = "//span[@class='pagnNext']"
 
 
@@ -56,6 +56,7 @@ def MainMenu():
         oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies"), title="Browse Movies"))
         oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv"), title="Browse TV"))
         oc.add(DirectoryObject(key=Callback(LibraryMenu), title="Your Library"))
+        oc.add(DirectoryObject(key=Callback(WatchlistMenu), title="Your Watchlist"))
         oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(PLUGIN_ICON_SEARCH)))
 
     oc.add(PrefsObject(title="Preferences"))
@@ -74,7 +75,7 @@ def SearchMenu():
 
 
 @route("/video/amazonprime/browsemenu")
-def BrowseMenu(video_type, is_library=False, query=None, pagination_url=None):
+def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
     if query:
         if not pagination_url:
             # NOTE(jk0): Only build a query URL if we're performing a new
@@ -82,7 +83,9 @@ def BrowseMenu(video_type, is_library=False, query=None, pagination_url=None):
             query = query.replace(" ", "%20")
             browse_url = SEARCH_URL % query
     elif is_library:
-        browse_url = LIBRARY_URL % video_type
+        browse_url = ACCOUNT_URL % ("library", video_type)
+    elif is_watchlist:
+        browse_url = ACCOUNT_URL % ("watchlist", video_type)
     elif video_type == "movies":
         browse_url = MOVIES_URL
     else:
@@ -104,6 +107,10 @@ def BrowseMenu(video_type, is_library=False, query=None, pagination_url=None):
             item_asin = item.xpath("//@asin")[i]
             item_title = item.xpath("//div[@class='title']/a/text()")[i]
             item_image_link = item.xpath("//div[@class='img-container']/a/img/@src")[i]
+        elif is_watchlist:
+            item_asin = item.xpath("//div[@class='hover-hook']/a/@href")[i].split("/")[3]
+            item_title = item.xpath("//div[@class='hover-hook']/a/img/@alt")[i]
+            item_image_link = item.xpath("//div[@class='hover-hook']/a/img/@src")[i]
         elif query:
             item_asin = item.xpath("//div[contains(@id, 'result_')]/@name")[i]
             item_title = item.xpath("//h3[@class='newaps']/a/span/text()")[i]
@@ -153,6 +160,16 @@ def LibraryMenu():
 
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_library=True), title="Movies"))
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
+
+    return oc
+
+
+@route("/video/amazonprime/watchlistmenu")
+def WatchlistMenu():
+    oc = ObjectContainer()
+
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_watchlist=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_watchlist=True), title="TV"))
 
     return oc
 
