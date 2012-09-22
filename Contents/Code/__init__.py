@@ -30,8 +30,8 @@ MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A28589050
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
 
-BROWSE_PATTERN = "//div[contains(@id, 'result_')]"
-LIBRARY_PATTERN = "//*[@class='lib-item']"
+BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //*[@class='lib-item']"
+PAGINATION_PATTERN = "//span[@class='pagnNext']"
 
 
 def Start():
@@ -74,22 +74,25 @@ def SearchMenu():
 
 
 @route("/video/amazonprime/browsemenu")
-def BrowseMenu(video_type, is_library=False, query=None):
-    match_pattern = BROWSE_PATTERN
-
+def BrowseMenu(video_type, is_library=False, query=None, pagination_url=None):
     if query:
-        query = query.replace(" ", "%20")
-        browse_url = SEARCH_URL % query
+        if not pagination_url:
+            # NOTE(jk0): Only build a query URL if we're performing a new
+            # search and not using pagination on a previous search.
+            query = query.replace(" ", "%20")
+            browse_url = SEARCH_URL % query
     elif is_library:
-        match_pattern = LIBRARY_PATTERN
         browse_url = LIBRARY_URL % video_type
     elif video_type == "movies":
         browse_url = MOVIES_URL
     else:
         browse_url = TV_URL
 
+    if pagination_url:
+        browse_url = AMAZON_URL + pagination_url
+
     html = HTML.ElementFromURL(browse_url)
-    video_list = html.xpath(match_pattern)
+    video_list = html.xpath(BROWSE_PATTERN)
 
     verify_ownership = True if is_library else False
 
@@ -115,9 +118,6 @@ def BrowseMenu(video_type, is_library=False, query=None):
         else:
             seasons.append((item_title, item_asin, item_image_link))
 
-    if query and (len(videos) == 0 and len(seasons) == 0):
-        return MessageContainer("No Results", "No results were found for '%s'." % query)
-
     oc = ObjectContainer()
 
     for video in videos:
@@ -134,6 +134,15 @@ def BrowseMenu(video_type, is_library=False, query=None):
         thumb = Resource.ContentsOfURLWithFallback(url=season[2], fallback=PLUGIN_ICON_DEFAULT)
 
         oc.add(DirectoryObject(key=Callback(TVSeason, season_url=season_url, season_thumb_url=season[2], verify_ownership=verify_ownership), title=season[0], thumb=thumb))
+
+    pagination = html.xpath(PAGINATION_PATTERN)
+    if len(pagination) > 0:
+        pagination_url = pagination[0].xpath("//a[@class='pagnNext']/@href")[0]
+
+        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
+
+    if len(oc) == 0:
+        return MessageContainer("No Results", "No results were found.")
 
     return oc
 
