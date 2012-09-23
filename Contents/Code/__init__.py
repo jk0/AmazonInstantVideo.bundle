@@ -16,7 +16,7 @@ import account
 import utils
 
 
-PLUGIN_TITLE = "Amazon Prime Instant Video"
+PLUGIN_TITLE = "Amazon Instant Video"
 PLUGIN_ICON_DEFAULT = "icon-default.png"
 PLUGIN_ICON_SEARCH = "icon-search.png"
 PLUGIN_ICON_PREFS = "icon-prefs.png"
