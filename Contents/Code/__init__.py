@@ -16,7 +16,7 @@ import account
 import utils
 
 
-PLUGIN_TITLE = "Amazon Prime Instant Videos"
+PLUGIN_TITLE = "Amazon Prime Instant Video"
 PLUGIN_ICON_DEFAULT = "icon-default.png"
 PLUGIN_ICON_SEARCH = "icon-search.png"
 PLUGIN_ICON_PREFS = "icon-prefs.png"
@@ -27,7 +27,7 @@ MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=
 
 ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
-TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2625373011%2Cn%3A%212644981011%2Cn%3A%212644982011%2Cn%3A2858778011%2Cn%3A2864549011%2Cp_85%3A2470955011"
+TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
 
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
@@ -46,9 +46,7 @@ def Start():
 
 @handler("/video/amazonprime", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
 def MainMenu():
-    logged_in = account.logged_in()
-    if not logged_in:
-        logged_in = account.authenticate(AMAZON_URL)
+    logged_in = account.authenticate(AMAZON_URL)
 
     oc = ObjectContainer()
 
@@ -76,6 +74,8 @@ def SearchMenu():
 
 @route("/video/amazonprime/browsemenu")
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
+    account.authenticate(AMAZON_URL)
+
     if query:
         if not pagination_url:
             # NOTE(jk0): Only build a query URL if we're performing a new

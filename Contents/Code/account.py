@@ -14,6 +14,9 @@
 
 
 def authenticate(amazon_url):
+    if logged_in():
+        return True
+
     params = {
         "action": "sign-in",
         "protocol": "https",
