@@ -16,14 +16,11 @@ import time
 
 
 def parse_flash_vars(url):
-    re_flash = Regex("'flashVars', '(.*?)' \+ new Date\(\)\.getTime\(\)\+ '(.*?)'", Regex.DOTALL)
-
     page_content = HTTP.Request(url, follow_redirects=False).content
 
-    flash = re_flash.findall(page_content)
+    flash = Regex("'flashVars', '(.*?)' \+ new Date\(\)\.getTime\(\)\+ '(.*?)'", Regex.DOTALL).findall(page_content)
     flash = (flash[0][0] + flash[0][1]).split("&")
 
-    # TODO(jk0): Figure out what these are for and if they are really needed.
     flash_vars = {
         "token": "",
         "deviceTypeID": "A13Q6A55DBZB7M",
@@ -32,7 +29,9 @@ def parse_flash_vars(url):
         "customerID": "",
         "format": "json",
         "deviceID": "",
-        "asin": ""
+        "asin": "",
+        "url": url,
+        "swf_url": Regex("avodSwfUrl = '(.*?)'\;").findall(page_content)[0]
     }
 
     for var in flash:
@@ -70,9 +69,23 @@ def prepare_rtmp_info(flash_vars):
 
     # NOTE(jk0): Use the highest bitrate available.
     streams.sort(key=lambda x: x[0], reverse=True)
+
     rtmp_url = streams[0][1]
+    protocol = rtmp_url.split("://")
+    path = protocol[1].split("/")
+    hostname = path[0]
+    app_name = protocol[1].split(hostname + "/")[1].split("/")[0]
+    stream_auth = rtmp_url.split(app_name + "/")[1].split("?")
+    stream = stream_auth[0].replace(".mp4", "")
+    auth = stream_auth[1]
+    identurl = "http://" + hostname + "/fcs/ident"
+    ident = HTTP.Request(identurl).content
+    ip = Regex("<fcs><ip>(.+?)</ip></fcs>").findall(ident)[0]
+    base_rtmp = "rtmpe://" + ip + ":1935/" + app_name + "?_fcs_vhost=" + hostname + "&ovpfv=2.1.4&" + auth
 
-    # NOTE(jk0): What?
-    clip_stream = rtmp_url.split("ondemand/")[1].split("?")[0].replace(".mp4", "")
+    final_url = base_rtmp
+    final_url += " playpath=" + stream
+    final_url += " pageurl=" + flash_vars["url"]
+    final_url += " swfurl=" + flash_vars["swf_url"] + " swfvfy=true"
 
-    return rtmp_url, clip_stream
+    return final_url, stream

@@ -74,8 +74,6 @@ def SearchMenu():
 
 @route("/video/amazonprime/browsemenu")
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
-    account.authenticate(AMAZON_URL)
-
     if query:
         if not pagination_url:
             # NOTE(jk0): Only build a query URL if we're performing a new
