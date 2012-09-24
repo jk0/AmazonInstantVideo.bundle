@@ -28,7 +28,7 @@ MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=
 ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
-SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=i:aps,p_85:1&keywords=%s"
+SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?url=search-alias=instant-video&keywords=%s"
 
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
 PAGINATION_PATTERN = "//span[@class='pagnNext']"
@@ -109,10 +109,6 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             item_asin = item.xpath(".//div[@class='hover-hook']/a/@href")[0].split("/")[3]
             item_title = item.xpath(".//div[@class='hover-hook']/a/img/@alt")[0]
             item_image_link = item.xpath(".//div[@class='hover-hook']/a/img/@src")[0]
-        elif query:
-            item_asin = item.xpath(".//@name")[0]
-            item_title = item.xpath(".//h3[@class='newaps']/a/span/text()")[0].strip()
-            item_image_link = item.xpath(".//div[@class='image']/a/img/@src")[0]
         else:
             item_asin = item.xpath(".//@name")[0]
             item_title = item.xpath(".//div[@class='data']/h3/a/text()")[0].strip()
@@ -227,8 +223,11 @@ def VideoDetails(url):
 @route("/video/amazoninstantvideo/playvideo")
 @indirect
 def PlayVideo(url):
-    flash_vars = utils.parse_flash_vars(url)
-    rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars)
+    try:
+        flash_vars = utils.parse_flash_vars(url)
+        rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars)
+    except KeyError:
+        return MessageContainer("Error", "Unable to load video.")
 
     oc = ObjectContainer()
 
