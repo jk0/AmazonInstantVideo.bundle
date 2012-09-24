@@ -229,11 +229,7 @@ def PlayVideo(url):
     except KeyError:
         return MessageContainer("Error", "Unable to load video.")
 
-    oc = ObjectContainer()
-
-    oc.add(VideoClipObject(key=RTMPVideoURL(url=rtmp_url, clip=clip_stream)))
-
-    return oc
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
 
 
 def video_items(url):
