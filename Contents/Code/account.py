@@ -24,10 +24,10 @@ def authenticate(amazon_url):
 
     HTTP.Request(amazon_url + "/gp/flex/sign-in/select.html", values=params)
 
-    Dict["amazonprime_logged_in"] = False
+    Dict["amazoninstantvideo_logged_in"] = False
     for cookie in HTTP.CookiesForURL(amazon_url).split(";"):
         if "x-main" in cookie:
-            Dict["amazonprime_logged_in"] = True
+            Dict["amazoninstantvideo_logged_in"] = True
 
     Dict.Save()
 
@@ -35,7 +35,7 @@ def authenticate(amazon_url):
 
 
 def logged_in():
-    return Dict["amazonprime_logged_in"]
+    return Dict["amazoninstantvideo_logged_in"]
 
 
 def get_session_id(amazon_url):

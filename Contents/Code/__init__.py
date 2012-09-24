@@ -44,7 +44,7 @@ def Start():
     PrefsObject.thumb = R(PLUGIN_ICON_PREFS)
 
 
-@handler("/video/amazonprime", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
+@handler("/video/amazoninstantvideo", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
 def MainMenu():
     logged_in = account.authenticate(AMAZON_URL)
 
@@ -62,7 +62,7 @@ def MainMenu():
     return oc
 
 
-@route("/video/amazonprime/searchmenu")
+@route("/video/amazoninstantvideo/searchmenu")
 def SearchMenu():
     oc = ObjectContainer()
 
@@ -72,7 +72,7 @@ def SearchMenu():
     return oc
 
 
-@route("/video/amazonprime/browsemenu")
+@route("/video/amazoninstantvideo/browsemenu")
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
     if query:
         if not pagination_url:
@@ -152,7 +152,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     return oc
 
 
-@route("/video/amazonprime/librarymenu")
+@route("/video/amazoninstantvideo/librarymenu")
 def LibraryMenu():
     oc = ObjectContainer()
 
@@ -162,7 +162,7 @@ def LibraryMenu():
     return oc
 
 
-@route("/video/amazonprime/watchlistmenu")
+@route("/video/amazoninstantvideo/watchlistmenu")
 def WatchlistMenu():
     oc = ObjectContainer()
 
@@ -172,12 +172,12 @@ def WatchlistMenu():
     return oc
 
 
-@route("/video/amazonprime/search")
+@route("/video/amazoninstantvideo/search")
 def Search(query, video_type):
     return BrowseMenu(video_type=video_type, query=query)
 
 
-@route("/video/amazonprime/tvseason")
+@route("/video/amazoninstantvideo/tvseason")
 def TVSeason(season_url, season_thumb_url, verify_ownership):
     html = HTML.ElementFromURL(season_url)
     episode_list = html.xpath("//*[contains(@class, 'episodeRow')]")
@@ -205,7 +205,7 @@ def TVSeason(season_url, season_thumb_url, verify_ownership):
     return oc
 
 
-@route("/video/amazonprime/getvideoobject")
+@route("/video/amazoninstantvideo/getvideoobject")
 def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
     thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=PLUGIN_ICON_DEFAULT)
 
@@ -215,7 +215,7 @@ def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
         return MovieObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
 
 
-@route("/video/amazonprime/videodetails")
+@route("/video/amazoninstantvideo/videodetails")
 def VideoDetails(url):
     oc = ObjectContainer()
 
@@ -224,7 +224,7 @@ def VideoDetails(url):
     return oc
 
 
-@route("/video/amazonprime/playvideo")
+@route("/video/amazoninstantvideo/playvideo")
 @indirect
 def PlayVideo(url):
     flash_vars = utils.parse_flash_vars(url)
