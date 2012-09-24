@@ -46,16 +46,21 @@ def Start():
 
 @handler("/video/amazoninstantvideo", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
 def MainMenu():
-    logged_in = account.authenticate(AMAZON_URL)
+    logged_in = account.authenticate()
+    is_prime = account.is_prime()
 
     oc = ObjectContainer()
 
     if logged_in:
-        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies"), title="Browse Movies"))
-        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv"), title="Browse TV"))
+        if is_prime:
+            oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies"), title="Browse Movies"))
+            oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv"), title="Browse TV"))
+
         oc.add(DirectoryObject(key=Callback(LibraryMenu), title="Your Library"))
-        oc.add(DirectoryObject(key=Callback(WatchlistMenu), title="Your Watchlist"))
-        oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(PLUGIN_ICON_SEARCH)))
+
+        if is_prime:
+            oc.add(DirectoryObject(key=Callback(WatchlistMenu), title="Your Watchlist"))
+            oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(PLUGIN_ICON_SEARCH)))
 
     oc.add(PrefsObject(title="Preferences"))
 

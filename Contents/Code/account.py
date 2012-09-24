@@ -13,7 +13,9 @@
 #   limitations under the License.
 
 
-def authenticate(amazon_url):
+def authenticate():
+    amazon_url = "https://www.amazon.com"
+
     params = {
         "action": "sign-in",
         "protocol": "https",
@@ -22,12 +24,18 @@ def authenticate(amazon_url):
         "password": Prefs["password"]
     }
 
-    HTTP.Request(amazon_url + "/gp/flex/sign-in/select.html", values=params)
+    HTTP.Request(amazon_url + "/gp/flex/sign-in/select.html", values=params,
+                 immediate=True)
 
     Dict["amazoninstantvideo_logged_in"] = False
     for cookie in HTTP.CookiesForURL(amazon_url).split(";"):
         if "x-main" in cookie:
             Dict["amazoninstantvideo_logged_in"] = True
+
+    Dict["amazoninstantvideo_is_prime"] = False
+    html = HTML.ElementFromURL(amazon_url)
+    if html.xpath("//div[@id='nav-cross-shop']/a/@href")[0].endswith("_prmlogo"):
+        Dict["amazoninstantvideo_is_prime"] = True
 
     Dict.Save()
 
@@ -36,6 +44,10 @@ def authenticate(amazon_url):
 
 def logged_in():
     return Dict["amazoninstantvideo_logged_in"]
+
+
+def is_prime():
+    return Dict["amazoninstantvideo_is_prime"]
 
 
 def get_session_id(amazon_url):
