@@ -184,14 +184,14 @@ def TVSeason(season_url, season_thumb_url, verify_ownership):
 
     episodes = []
 
-    for i, episode in enumerate(episode_list):
-        episode_owned = True if episode.xpath("//td[last()-2]/text()")[i] == "Owned" else False
+    for episode in episode_list:
+        episode_owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
 
         # NOTE(jk0): Not sure why this was converted to a string?
         if verify_ownership == "False" or episode_owned:
-            episode_asin = episode.xpath("//@asin")[i]
-            episode_title = episode.xpath("//td[@title]/div/text()")[i].strip()
-            episode_summary = episode.xpath("//td/div[contains(@style, 'overflow-y')]/text()")[i].strip()
+            episode_asin = episode.xpath(".//@asin")[0]
+            episode_title = episode.xpath(".//td[@title]/div/text()")[0].strip()
+            episode_summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
 
             episodes.append((episode_asin, episode_title, episode_summary))
 
