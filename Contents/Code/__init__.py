@@ -24,7 +24,8 @@ PLUGIN_ICON_NEXT = "icon-next.png"
 PLUGIN_ART = "art-default.jpg"
 
 AMAZON_URL = "https://www.amazon.com"
-MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin="
+MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=%s"
+PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 
 ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
@@ -32,6 +33,9 @@ TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?url=search-alias=instant-video&keywords=%s"
 
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
+ASIN_PATTERN = ".//@asin | .//div[@class='hover-hook']/a/@href | .//@name"
+TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//div[@class='data']/h3/a/text()"
+IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src"
 PAGINATION_PATTERN = "//span[@class='pagnNext']"
 
 
@@ -69,6 +73,26 @@ def MainMenu():
     return oc
 
 
+@route("/video/amazoninstantvideo/librarymenu")
+def LibraryMenu():
+    oc = ObjectContainer()
+
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_library=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
+
+    return oc
+
+
+@route("/video/amazoninstantvideo/watchlistmenu")
+def WatchlistMenu():
+    oc = ObjectContainer()
+
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_watchlist=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_watchlist=True), title="TV"))
+
+    return oc
+
+
 @route("/video/amazoninstantvideo/searchmenu")
 def SearchMenu():
     oc = ObjectContainer()
@@ -100,48 +124,23 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         browse_url = AMAZON_URL + pagination_url
 
     html = HTML.ElementFromURL(browse_url)
-    video_list = html.xpath(BROWSE_PATTERN)
-
-    verify_ownership = True if is_library else False
-
-    videos = []
-    seasons = []
-
-    for item in video_list:
-        if is_library:
-            item_asin = item.xpath(".//@asin")[0]
-            item_title = item.xpath(".//div[@class='title']/a/text()")[0].strip()
-            item_image_link = item.xpath(".//div[@class='img-container']/a/img/@src")[0]
-        elif is_watchlist:
-            item_asin = item.xpath(".//div[@class='hover-hook']/a/@href")[0].split("/")[3]
-            item_title = item.xpath(".//div[@class='hover-hook']/a/img/@alt")[0]
-            item_image_link = item.xpath(".//div[@class='hover-hook']/a/img/@src")[0]
-        else:
-            item_asin = item.xpath(".//@name")[0]
-            item_title = item.xpath(".//div[@class='data']/h3/a/text()")[0].strip()
-            item_image_link = item.xpath(".//div[@class='image']/a/img/@src")[0]
-
-        if video_type == "movies":
-            videos.append((item_title, item_asin, item_image_link))
-        else:
-            seasons.append((item_title, item_asin, item_image_link))
+    videos = html.xpath(BROWSE_PATTERN)
 
     oc = ObjectContainer()
 
-    for video in videos:
-        video_url = MINI_PLAYER_URL + video[1]
+    for item in videos:
+        asin = item.xpath(ASIN_PATTERN)[0]
+        title = item.xpath(TITLE_PATTERN)[0].strip()
+        image_link = item.xpath(IMAGE_LINK_PATTERN)[0]
+
+        thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=PLUGIN_ICON_DEFAULT)
 
         if video_type == "movies":
-            oc.add(GetVideoObject(url=video_url, video_type="movie", title=video[0], thumb_url=video[2]))
+            url = MINI_PLAYER_URL % asin
+
+            oc.add(MovieObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
         else:
-            oc.add(GetVideoObject(url=video_url, video_type="episode", title=video[0], thumb_url=video[2]))
-
-    for season in seasons:
-        season_url = AMAZON_URL + "/gp/product/" + season[1]
-
-        thumb = Resource.ContentsOfURLWithFallback(url=season[2], fallback=PLUGIN_ICON_DEFAULT)
-
-        oc.add(DirectoryObject(key=Callback(TVSeason, season_url=season_url, season_thumb_url=season[2], verify_ownership=verify_ownership), title=season[0], thumb=thumb))
+            oc.add(DirectoryObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), title=title, thumb=thumb))
 
     pagination = html.xpath(PAGINATION_PATTERN)
     if len(pagination) > 0:
@@ -155,67 +154,31 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     return oc
 
 
-@route("/video/amazoninstantvideo/librarymenu")
-def LibraryMenu():
-    oc = ObjectContainer()
-
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_library=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
-
-    return oc
-
-
-@route("/video/amazoninstantvideo/watchlistmenu")
-def WatchlistMenu():
-    oc = ObjectContainer()
-
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_watchlist=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_watchlist=True), title="TV"))
-
-    return oc
-
-
 @route("/video/amazoninstantvideo/search")
 def Search(query, video_type):
     return BrowseMenu(video_type=video_type, query=query)
 
 
 @route("/video/amazoninstantvideo/tvseason")
-def TVSeason(season_url, season_thumb_url, verify_ownership):
-    html = HTML.ElementFromURL(season_url)
-    episode_list = html.xpath("//*[contains(@class, 'episodeRow')]")
-
-    episodes = []
-
-    for episode in episode_list:
-        episode_owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
-
-        # NOTE(jk0): Not sure why this was converted to a string?
-        if verify_ownership == "False" or episode_owned:
-            episode_asin = episode.xpath(".//@asin")[0]
-            episode_title = episode.xpath(".//td[@title]/div/text()")[0].strip()
-            episode_summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
-
-            episodes.append((episode_asin, episode_title, episode_summary))
+def TVSeason(asin, thumb, is_library):
+    html = HTML.ElementFromURL(PRODUCT_URL % asin)
+    episodes = html.xpath("//*[contains(@class, 'episodeRow')]")
 
     oc = ObjectContainer()
 
     for episode in episodes:
-        episode_url = MINI_PLAYER_URL + episode[0]
+        owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
 
-        oc.add(GetVideoObject(url=episode_url, video_type="episode", title=episode[1], summary=episode[2], thumb_url=season_thumb_url))
+        if is_library == "False" or owned:
+            asin = episode.xpath(".//@asin")[0]
+            title = episode.xpath(".//td[@title]/div/text()")[0].strip()
+            summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
+
+            url = MINI_PLAYER_URL % asin
+
+            oc.add(EpisodeObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb))
 
     return oc
-
-
-@route("/video/amazoninstantvideo/getvideoobject")
-def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
-    thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=PLUGIN_ICON_DEFAULT)
-
-    if video_type == "episode":
-        return EpisodeObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
-    else:
-        return MovieObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
 
 
 @route("/video/amazoninstantvideo/videodetails")
