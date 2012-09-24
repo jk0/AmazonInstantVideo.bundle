@@ -206,9 +206,9 @@ def GetVideoObject(url, video_type, title=None, summary=None, thumb_url=None):
     thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=PLUGIN_ICON_DEFAULT)
 
     if video_type == "episode":
-        return EpisodeObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
+        return EpisodeObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
     else:
-        return MovieObject(key=Callback(VideoDetails, url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
+        return MovieObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb)
 
 
 @route("/video/amazoninstantvideo/videodetails")
