@@ -20,6 +20,7 @@ PLUGIN_TITLE = "Amazon Instant Video"
 PLUGIN_ICON_DEFAULT = "icon-default.png"
 PLUGIN_ICON_SEARCH = "icon-search.png"
 PLUGIN_ICON_PREFS = "icon-prefs.png"
+PLUGIN_ICON_NEXT = "icon-next.png"
 PLUGIN_ART = "art-default.jpg"
 
 AMAZON_URL = "https://www.amazon.com"
@@ -42,6 +43,7 @@ def Start():
     VideoClipObject.thumb = R(PLUGIN_ICON_DEFAULT)
     InputDirectoryObject.thumb = R(PLUGIN_ICON_SEARCH)
     PrefsObject.thumb = R(PLUGIN_ICON_PREFS)
+    NextPageObject.thumb = R(PLUGIN_ICON_NEXT)
 
 
 @handler("/video/amazoninstantvideo", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
@@ -145,7 +147,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     if len(pagination) > 0:
         pagination_url = pagination[0].xpath("//a[@class='pagnNext']/@href")[0]
 
-        oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
+        oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
 
     if len(oc) == 0:
         return MessageContainer("No Results", "No results were found.")
