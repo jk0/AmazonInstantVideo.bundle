@@ -138,7 +138,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         if video_type == "movies":
             url = MINI_PLAYER_URL % asin
 
-            oc.add(MovieObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
+            oc.add(MovieObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
         else:
             oc.add(DirectoryObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), title=title, thumb=thumb))
 
@@ -176,16 +176,7 @@ def TVSeason(asin, thumb, is_library):
 
             url = MINI_PLAYER_URL % asin
 
-            oc.add(EpisodeObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb))
-
-    return oc
-
-
-@route("/video/amazoninstantvideo/videodetails")
-def VideoDetails(url):
-    oc = ObjectContainer()
-
-    oc.add(VideoClipObject(key=Callback(VideoDetails, url=url), rating_key=url, items=video_items(url)))
+            oc.add(EpisodeObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb))
 
     return oc
 
