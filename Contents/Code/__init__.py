@@ -100,23 +100,23 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     videos = []
     seasons = []
 
-    for i, item in enumerate(video_list):
+    for item in video_list:
         if is_library:
-            item_asin = item.xpath("//@asin")[i]
-            item_title = item.xpath("//div[@class='title']/a/text()")[i]
-            item_image_link = item.xpath("//div[@class='img-container']/a/img/@src")[i]
+            item_asin = item.xpath(".//@asin")[0]
+            item_title = item.xpath(".//div[@class='title']/a/text()")[0].strip()
+            item_image_link = item.xpath(".//div[@class='img-container']/a/img/@src")[0]
         elif is_watchlist:
-            item_asin = item.xpath("//div[@class='hover-hook']/a/@href")[i].split("/")[3]
-            item_title = item.xpath("//div[@class='hover-hook']/a/img/@alt")[i]
-            item_image_link = item.xpath("//div[@class='hover-hook']/a/img/@src")[i]
+            item_asin = item.xpath(".//div[@class='hover-hook']/a/@href")[0].split("/")[3]
+            item_title = item.xpath(".//div[@class='hover-hook']/a/img/@alt")[0]
+            item_image_link = item.xpath(".//div[@class='hover-hook']/a/img/@src")[0]
         elif query:
-            item_asin = item.xpath("//div[contains(@id, 'result_')]/@name")[i]
-            item_title = item.xpath("//h3[@class='newaps']/a/span/text()")[i]
-            item_image_link = item.xpath("//div[@class='image']/a/img/@src")[i]
+            item_asin = item.xpath(".//@name")[0]
+            item_title = item.xpath(".//h3[@class='newaps']/a/span/text()")[0].strip()
+            item_image_link = item.xpath(".//div[@class='image']/a/img/@src")[0]
         else:
-            item_asin = item.xpath("//div[contains(@id, 'result_')]/@name")[i]
-            item_title = item.xpath("//div[@class='data']/h3/a/text()")[i]
-            item_image_link = item.xpath("//div[@class='image']/a/img/@src")[i]
+            item_asin = item.xpath(".//@name")[0]
+            item_title = item.xpath(".//div[@class='data']/h3/a/text()")[0].strip()
+            item_image_link = item.xpath(".//div[@class='image']/a/img/@src")[0]
 
         if video_type == "movies":
             videos.append((item_title, item_asin, item_image_link))
