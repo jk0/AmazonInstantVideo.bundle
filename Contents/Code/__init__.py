@@ -30,10 +30,11 @@ PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
-SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?url=search-alias=instant-video&keywords=%s"
+SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955011&keywords=%s"
 
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
-ASIN_PATTERN = ".//@asin | .//div[@class='hover-hook']/a/@href | .//@name"
+IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
+ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
 TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//div[@class='data']/h3/a/text()"
 IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src"
 PAGINATION_PATTERN = "//span[@class='pagnNext']"
@@ -129,6 +130,10 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     oc = ObjectContainer()
 
     for item in videos:
+        is_prime = True if len(item.xpath(IS_PRIME_PATTERN)) > 0 else False
+        if is_watchlist and not is_prime:
+            continue
+
         asin = item.xpath(ASIN_PATTERN)[0]
         title = item.xpath(TITLE_PATTERN)[0].strip()
         image_link = item.xpath(IMAGE_LINK_PATTERN)[0]
@@ -137,7 +142,6 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
 
         if video_type == "movies":
             url = MINI_PLAYER_URL % asin
-
             oc.add(MovieObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
         else:
             oc.add(DirectoryObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), title=title, thumb=thumb))
@@ -145,7 +149,6 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     pagination = html.xpath(PAGINATION_PATTERN)
     if len(pagination) > 0:
         pagination_url = pagination[0].xpath("//a[@class='pagnNext']/@href")[0]
-
         oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
 
     if len(oc) == 0:
