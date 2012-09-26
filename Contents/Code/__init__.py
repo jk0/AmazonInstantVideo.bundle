@@ -144,7 +144,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             url = MINI_PLAYER_URL % asin
             oc.add(MovieObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
         else:
-            oc.add(DirectoryObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), title=title, thumb=thumb))
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
     pagination = html.xpath(PAGINATION_PATTERN)
     if len(pagination) > 0:
