@@ -104,7 +104,7 @@ def SearchMenu():
     return oc
 
 
-@route("/video/amazoninstantvideo/browsemenu")
+@route("/video/amazoninstantvideo/browsemenu", is_library=bool, is_watchlist=bool)
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
     if query:
         if not pagination_url:
@@ -162,7 +162,7 @@ def Search(query, video_type):
     return BrowseMenu(video_type=video_type, query=query)
 
 
-@route("/video/amazoninstantvideo/tvseason")
+@route("/video/amazoninstantvideo/tvseason", is_library=bool)
 def TVSeason(asin, thumb, is_library):
     html = HTML.ElementFromURL(PRODUCT_URL % asin)
     episodes = html.xpath("//*[contains(@class, 'episodeRow')]")
@@ -172,7 +172,7 @@ def TVSeason(asin, thumb, is_library):
     for episode in episodes:
         owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
 
-        if is_library == "False" or owned:
+        if not is_library or owned:
             asin = episode.xpath(".//@asin")[0]
             title = episode.xpath(".//td[@title]/div/text()")[0].strip()
             summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
