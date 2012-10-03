@@ -104,7 +104,7 @@ def SearchMenu():
     return oc
 
 
-@route("/video/amazoninstantvideo/browsemenu")
+@route("/video/amazoninstantvideo/browsemenu", is_library=bool, is_watchlist=bool)
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
     if query:
         if not pagination_url:
@@ -144,7 +144,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             url = MINI_PLAYER_URL % asin
             oc.add(MovieObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
         else:
-            oc.add(DirectoryObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), title=title, thumb=thumb))
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
     pagination = html.xpath(PAGINATION_PATTERN)
     if len(pagination) > 0:
@@ -152,7 +152,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
 
     if len(oc) == 0:
-        return MessageContainer("No Results", "No results were found.")
+        return ObjectContainer(header="No Results", message="No results were found.")
 
     return oc
 
@@ -162,7 +162,7 @@ def Search(query, video_type):
     return BrowseMenu(video_type=video_type, query=query)
 
 
-@route("/video/amazoninstantvideo/tvseason")
+@route("/video/amazoninstantvideo/tvseason", is_library=bool)
 def TVSeason(asin, thumb, is_library):
     html = HTML.ElementFromURL(PRODUCT_URL % asin)
     episodes = html.xpath("//*[contains(@class, 'episodeRow')]")
@@ -170,9 +170,9 @@ def TVSeason(asin, thumb, is_library):
     oc = ObjectContainer()
 
     for episode in episodes:
-        owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
+        is_owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
 
-        if is_library == "False" or owned:
+        if not is_library or is_owned:
             asin = episode.xpath(".//@asin")[0]
             title = episode.xpath(".//td[@title]/div/text()")[0].strip()
             summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
@@ -191,7 +191,7 @@ def PlayVideo(url):
         flash_vars = utils.parse_flash_vars(url)
         rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars)
     except KeyError:
-        return MessageContainer("Error", "Unable to load video.")
+        return ObjectContainer(header="Error", message="Unable to load video.")
 
     return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
 
