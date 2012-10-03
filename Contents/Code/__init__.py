@@ -170,9 +170,9 @@ def TVSeason(asin, thumb, is_library):
     oc = ObjectContainer()
 
     for episode in episodes:
-        owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
+        is_owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
 
-        if not is_library or owned:
+        if not is_library or is_owned:
             asin = episode.xpath(".//@asin")[0]
             title = episode.xpath(".//td[@title]/div/text()")[0].strip()
             summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
