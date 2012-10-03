@@ -152,7 +152,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
 
     if len(oc) == 0:
-        return MessageContainer("No Results", "No results were found.")
+        return ObjectContainer(header="No Results", message="No results were found.")
 
     return oc
 
@@ -191,7 +191,7 @@ def PlayVideo(url):
         flash_vars = utils.parse_flash_vars(url)
         rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars)
     except KeyError:
-        return MessageContainer("Error", "Unable to load video.")
+        return ObjectContainer(header="Error", message="Unable to load video.")
 
     return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
 
