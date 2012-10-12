@@ -37,7 +37,7 @@ IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
 ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
 TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//div[@class='data']/h3/a/text()"
 IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src"
-PAGINATION_PATTERN = "//span[@class='pagnNext']"
+PAGINATION_PATTERN = "//div[@id='bottomBar']/div[@id='pagn']/div | //span[@class='pagnNext']"
 
 
 def Start():
