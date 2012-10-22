@@ -35,7 +35,7 @@ SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
 IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
 ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
-TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//div[@class='data']/h3/a/text()"
+TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text()"
 IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src"
 PAGINATION_PATTERN = "//div[@id='bottomBar']/div[@id='pagn']/div | //span[@class='pagnNext']"
 
