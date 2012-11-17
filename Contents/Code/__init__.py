@@ -35,9 +35,9 @@ SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
 IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
 ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
-TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text()"
+TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text() | .//div[@class='data']/h3/a/text()"
 IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src"
-PAGINATION_PATTERN = "//div[@id='bottomBar']/div[@id='pagn']/div | //span[@class='pagnNext']"
+PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
 
 
 def Start():
@@ -146,10 +146,9 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         else:
             oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
-    pagination = html.xpath(PAGINATION_PATTERN)
-    if len(pagination) > 0:
-        pagination_url = pagination[0].xpath("//a[@class='pagnNext']/@href")[0]
-        oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url), title="Next..."))
+    pagination_url = html.xpath(PAGINATION_PATTERN)
+    if len(pagination_url) > 0:
+        oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url[0]), title="Next..."))
 
     if len(oc) == 0:
         return ObjectContainer(header="No Results", message="No results were found.")
