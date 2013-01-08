@@ -36,7 +36,7 @@ BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | /
 IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
 ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
 TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text() | .//div[@class='data']/h3/a/text()"
-IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src"
+IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src | .//div[contains(concat(' ', normalize-space(@class), ' '), 'imageContainer')]/a/img/@src"
 PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
 
 
@@ -128,15 +128,22 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     videos = html.xpath(BROWSE_PATTERN)
 
     oc = ObjectContainer()
-
     for item in videos:
         is_prime = True if len(item.xpath(IS_PRIME_PATTERN)) > 0 else False
         if is_watchlist and not is_prime:
             continue
 
-        asin = item.xpath(ASIN_PATTERN)[0]
-        title = item.xpath(TITLE_PATTERN)[0].strip()
-        image_link = item.xpath(IMAGE_LINK_PATTERN)[0]
+        # We wrap the pattern matchers with try to avoid total failure 
+        # if one attribute is not found for an item.
+        asin = ""
+        title = ""
+        image_link = ""
+        try:
+            asin = item.xpath(ASIN_PATTERN)[0]
+            title = item.xpath(TITLE_PATTERN)[0].strip()
+            image_link = item.xpath(IMAGE_LINK_PATTERN)[0]
+        except:
+            pass
 
         thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=PLUGIN_ICON_DEFAULT)
 
