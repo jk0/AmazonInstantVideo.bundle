@@ -14,8 +14,13 @@
 
 import time
 
+import account
+
 
 def parse_flash_vars(url):
+    if not account.logged_in():
+        account.authenticate()
+
     page_content = HTTP.Request(url, follow_redirects=False).content
 
     flash = Regex("'flashVars', '(.*?)' \+ new Date\(\)\.getTime\(\)\+ '(.*?)'", Regex.DOTALL).findall(page_content)
