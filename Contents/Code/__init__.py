@@ -76,7 +76,7 @@ def MainMenu():
 
 @route("/video/amazoninstantvideo/librarymenu")
 def LibraryMenu():
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2="Your Library")
 
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_library=True), title="Movies"))
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
@@ -86,7 +86,7 @@ def LibraryMenu():
 
 @route("/video/amazoninstantvideo/watchlistmenu")
 def WatchlistMenu():
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2="Your Watchlist")
 
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_watchlist=True), title="Movies"))
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_watchlist=True), title="TV"))
@@ -96,7 +96,7 @@ def WatchlistMenu():
 
 @route("/video/amazoninstantvideo/searchmenu")
 def SearchMenu():
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2="Search")
 
     oc.add(InputDirectoryObject(key=Callback(Search, video_type="movies"), title="Search Movies", prompt="Search for a Movie"))
     oc.add(InputDirectoryObject(key=Callback(Search, video_type="tv"), title="Search TV", prompt="Search for a TV show"))
@@ -106,6 +106,8 @@ def SearchMenu():
 
 @route("/video/amazoninstantvideo/browsemenu", is_library=bool, is_watchlist=bool)
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
+    title = "Browse TV Shows" if video_type == "tv" else "Browse Movies"
+
     if query:
         if not pagination_url:
             # NOTE(jk0): Only build a query URL if we're performing a new
@@ -113,8 +115,10 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             query = query.replace(" ", "%20")
             browse_url = SEARCH_URL % query
     elif is_library:
+        title = title + " (Library)"
         browse_url = ACCOUNT_URL % ("library", video_type)
     elif is_watchlist:
+        title = title + " (Watchlist)"
         browse_url = ACCOUNT_URL % ("watchlist", video_type)
     elif video_type == "movies":
         browse_url = MOVIES_URL
@@ -127,7 +131,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     html = HTML.ElementFromURL(browse_url)
     videos = html.xpath(BROWSE_PATTERN)
 
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2=title)
 
     for item in videos:
         is_prime = True if len(item.xpath(IS_PRIME_PATTERN)) > 0 else False
@@ -152,7 +156,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             url = MINI_PLAYER_URL % asin
             oc.add(MovieObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
         else:
-            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
     pagination_url = html.xpath(PAGINATION_PATTERN)
     if len(pagination_url) > 0:
@@ -170,11 +174,11 @@ def Search(query, video_type):
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)
-def TVSeason(asin, thumb, is_library):
+def TVSeason(asin, title, thumb, is_library):
     html = HTML.ElementFromURL(PRODUCT_URL % asin)
     episodes = html.xpath("//*[contains(@class, 'episodeRow')]")
 
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2=title)
 
     for episode in episodes:
         is_owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
