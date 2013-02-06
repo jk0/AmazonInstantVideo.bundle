@@ -1,0 +1,28 @@
+def MetadataObjectForURL(url):
+    asin = url.split("=", 1)[1]
+    url = "http://www.amazon.com/dp/" + asin
+    page = HTML.ElementFromURL(url)
+
+    title = page.xpath("//div[@id='prod-details']/h1/text()")[0].strip()
+    summary = page.xpath("//div[@id='prod-details']/div[@class='prod-synopsis']/text()")[0].strip()
+    image_link = page.xpath("//img[@id='prod-img']/@src")[0]
+
+    thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback="icon-default.png")
+
+    return VideoClipObject(title=title, summary=summary, thumb=thumb)
+
+
+def MediaObjectsForURL(url):
+    return [
+        MediaObject(
+            protocol="webkit",
+            parts=[
+                PartObject(key=Callback(PlayVideo, url=url))
+            ]
+        )
+    ]
+
+
+@indirect
+def PlayVideo(url):
+    return IndirectResponse(VideoClipObject, key=WebVideoURL(url))
