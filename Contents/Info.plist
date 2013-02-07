@@ -10,10 +10,6 @@
 	<string>Roku</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
-	<key>PlexFrameworkFlags</key>
-	<array>
-		<string>UseRealRTMP</string>
-	</array>
 	<key>PlexPluginRegions</key>
 	<array>
 		<string>US</string>

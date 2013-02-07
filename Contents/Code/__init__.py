@@ -13,8 +13,6 @@
 #   limitations under the License.
 
 import account
-import utils
-
 
 PLUGIN_TITLE = "Amazon Instant Video"
 PLUGIN_ICON_DEFAULT = "icon-default.png"
@@ -154,7 +152,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
 
         if video_type == "movies":
             url = MINI_PLAYER_URL % asin
-            oc.add(MovieObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, thumb=thumb))
+            oc.add(MovieObject(url=url, title=title, thumb=thumb))
         else:
             oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
@@ -190,28 +188,6 @@ def TVSeason(asin, title, thumb, is_library):
 
             url = MINI_PLAYER_URL % asin
 
-            oc.add(EpisodeObject(key=Callback(PlayVideo, url=url), rating_key=url, items=video_items(url), title=title, summary=summary, thumb=thumb))
+            oc.add(EpisodeObject(url=url, title=title, summary=summary, thumb=thumb))
 
     return oc
-
-
-@route("/video/amazoninstantvideo/playvideo")
-@indirect
-def PlayVideo(url):
-    try:
-        flash_vars = utils.parse_flash_vars(url)
-        rtmp_url, clip_stream = utils.prepare_rtmp_info(flash_vars)
-    except KeyError:
-        return ObjectContainer(header="Error", message="Unable to load video.")
-
-    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip_stream))
-
-
-def video_items(url):
-    return [
-        MediaObject(
-            parts=[
-                PartObject(key=Callback(PlayVideo, url=url))
-            ]
-        )
-    ]
