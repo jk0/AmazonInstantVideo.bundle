@@ -4,6 +4,13 @@
 <dict>
 	<key>CFBundleIdentifier</key>
 	<string>com.plexapp.plugins.amazoninstantvideo</string>
+	<key>PlexClientCapabilities</key>
+	<dict>
+		<key>protocols</key>
+		<array>
+			<string>webkit</string>
+		</array>
+	</dict>
 	<key>PlexClientPlatforms</key>
 	<string>*</string>
 	<key>PlexClientPlatformExclusions</key>
