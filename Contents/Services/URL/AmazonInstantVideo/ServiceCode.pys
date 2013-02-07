@@ -1,13 +1,30 @@
+#   Copyright 2013 Josh Kearney
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+import constants as c
+
+
 def MetadataObjectForURL(url):
     asin = url.split("=", 1)[1]
-    url = "http://www.amazon.com/dp/" + asin
+    url = c.AMAZON_URL + "/dp/" + asin
     page = HTML.ElementFromURL(url)
 
-    title = page.xpath("//div[@id='prod-details']/h1/text()")[0].strip()
-    summary = page.xpath("//div[@id='prod-details']/div[@class='prod-synopsis']/text()")[0].strip()
-    image_link = page.xpath("//img[@id='prod-img']/@src")[0]
+    title = page.xpath(c.TITLE_PATTERN)[0].strip()
+    summary = page.xpath(c.SUMMARY_PATTERN)[0].strip()
+    image_link = page.xpath(c.IMAGE_LINK_PATTERN)[0]
 
-    thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback="icon-default.png")
+    thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
 
     return VideoClipObject(title=title, summary=summary, thumb=thumb)
 
