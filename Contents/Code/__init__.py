@@ -1,4 +1,4 @@
-#   Copyright 2012 Josh Kearney
+#   Copyright 2012-2013 Josh Kearney
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,42 +14,22 @@
 
 import account
 
-PLUGIN_TITLE = "Amazon Instant Video"
-PLUGIN_ICON_DEFAULT = "icon-default.png"
-PLUGIN_ICON_SEARCH = "icon-search.png"
-PLUGIN_ICON_PREFS = "icon-prefs.png"
-PLUGIN_ICON_NEXT = "icon-next.png"
-PLUGIN_ART = "art-default.jpg"
 
-AMAZON_URL = "https://www.amazon.com"
-MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=%s"
-PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
-
-ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
-MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
-TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
-SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955011&keywords=%s"
-
-BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
-IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
-ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
-TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text() | .//div[@class='data']/h3/a/text()"
-IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class='hover-hook']/a/img/@src | .//div[@class='image']/a/img/@src | .//div[contains(concat(' ', normalize-space(@class), ' '), 'imageContainer')]/a/img/@src"
-PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
+c = SharedCodeService.constants
 
 
 def Start():
-    ObjectContainer.title1 = PLUGIN_TITLE
-    ObjectContainer.art = R(PLUGIN_ART)
+    ObjectContainer.title1 = c.PLUGIN_TITLE
+    ObjectContainer.art = R(c.PLUGIN_ART)
 
-    DirectoryObject.thumb = R(PLUGIN_ICON_DEFAULT)
-    VideoClipObject.thumb = R(PLUGIN_ICON_DEFAULT)
-    InputDirectoryObject.thumb = R(PLUGIN_ICON_SEARCH)
-    PrefsObject.thumb = R(PLUGIN_ICON_PREFS)
-    NextPageObject.thumb = R(PLUGIN_ICON_NEXT)
+    DirectoryObject.thumb = R(c.PLUGIN_ICON_DEFAULT)
+    VideoClipObject.thumb = R(c.PLUGIN_ICON_DEFAULT)
+    InputDirectoryObject.thumb = R(c.PLUGIN_ICON_SEARCH)
+    PrefsObject.thumb = R(c.PLUGIN_ICON_PREFS)
+    NextPageObject.thumb = R(c.PLUGIN_ICON_NEXT)
 
 
-@handler("/video/amazoninstantvideo", PLUGIN_TITLE, thumb=PLUGIN_ICON_DEFAULT, art=PLUGIN_ART)
+@handler("/video/amazoninstantvideo", c.PLUGIN_TITLE, thumb=c.PLUGIN_ICON_DEFAULT, art=c.PLUGIN_ART)
 def MainMenu():
     logged_in = account.authenticate()
     is_prime = account.is_prime()
@@ -65,7 +45,7 @@ def MainMenu():
 
         if is_prime:
             oc.add(DirectoryObject(key=Callback(WatchlistMenu), title="Your Watchlist"))
-            oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(PLUGIN_ICON_SEARCH)))
+            oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(c.PLUGIN_ICON_SEARCH)))
 
     oc.add(PrefsObject(title="Preferences"))
 
@@ -111,28 +91,28 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             # NOTE(jk0): Only build a query URL if we're performing a new
             # search and not using pagination on a previous search.
             query = query.replace(" ", "%20")
-            browse_url = SEARCH_URL % query
+            browse_url = c.SEARCH_URL % query
     elif is_library:
         title = title + " (Library)"
-        browse_url = ACCOUNT_URL % ("library", video_type)
+        browse_url = c.ACCOUNT_URL % ("library", video_type)
     elif is_watchlist:
         title = title + " (Watchlist)"
-        browse_url = ACCOUNT_URL % ("watchlist", video_type)
+        browse_url = c.ACCOUNT_URL % ("watchlist", video_type)
     elif video_type == "movies":
-        browse_url = MOVIES_URL
+        browse_url = c.MOVIES_URL
     else:
-        browse_url = TV_URL
+        browse_url = c.TV_URL
 
     if pagination_url:
-        browse_url = AMAZON_URL + pagination_url
+        browse_url = c.AMAZON_URL + pagination_url
 
     html = HTML.ElementFromURL(browse_url)
-    videos = html.xpath(BROWSE_PATTERN)
+    videos = html.xpath(c.BROWSE_PATTERN)
 
     oc = ObjectContainer(title2=title)
 
     for item in videos:
-        is_prime = True if len(item.xpath(IS_PRIME_PATTERN)) > 0 else False
+        is_prime = True if len(item.xpath(c.IS_PRIME_PATTERN)) > 0 else False
         if is_watchlist and not is_prime:
             continue
 
@@ -142,21 +122,21 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         title = ""
         image_link = ""
         try:
-            asin = item.xpath(ASIN_PATTERN)[0]
-            title = item.xpath(TITLE_PATTERN)[0].strip()
-            image_link = item.xpath(IMAGE_LINK_PATTERN)[0]
+            asin = item.xpath(c.ASIN_PATTERN)[0]
+            title = item.xpath(c.TITLE_PATTERN)[0].strip()
+            image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
         except Exception:
             pass
 
-        thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=PLUGIN_ICON_DEFAULT)
+        thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
 
         if video_type == "movies":
-            url = MINI_PLAYER_URL % asin
+            url = c.MINI_PLAYER_URL % asin
             oc.add(MovieObject(url=url, title=title, thumb=thumb))
         else:
             oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
-    pagination_url = html.xpath(PAGINATION_PATTERN)
+    pagination_url = html.xpath(c.PAGINATION_PATTERN)
     if len(pagination_url) > 0:
         oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url[0]), title="Next..."))
 
@@ -173,20 +153,20 @@ def Search(query, video_type):
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)
 def TVSeason(asin, title, thumb, is_library):
-    html = HTML.ElementFromURL(PRODUCT_URL % asin)
-    episodes = html.xpath("//*[contains(@class, 'episodeRow')]")
+    html = HTML.ElementFromURL(c.PRODUCT_URL % asin)
+    episodes = html.xpath(c.EPISODE_BROWSE_PATTERN)
 
     oc = ObjectContainer(title2=title)
 
     for episode in episodes:
-        is_owned = True if episode.xpath(".//td[last()-2]/text()")[0].strip() == "Owned" else False
+        is_owned = True if episode.xpath(c.IS_OWNED_PATTERN)[0].strip() == "Owned" else False
 
         if not is_library or is_owned:
-            asin = episode.xpath(".//@asin")[0]
-            title = episode.xpath(".//td[@title]/div/text()")[0].strip()
-            summary = episode.xpath(".//td/div[contains(@style, 'overflow-y')]/text()")[0].strip()
+            asin = episode.xpath(c.EPISODE_ASIN_PATTERN)[0]
+            title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip()
+            summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
 
-            url = MINI_PLAYER_URL % asin
+            url = c.MINI_PLAYER_URL % asin
 
             oc.add(EpisodeObject(url=url, title=title, summary=summary, thumb=thumb))
 
