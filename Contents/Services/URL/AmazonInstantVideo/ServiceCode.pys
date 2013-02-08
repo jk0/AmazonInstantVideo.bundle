@@ -26,7 +26,21 @@ def MetadataObjectForURL(url):
 
     thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
 
-    return VideoClipObject(title=title, summary=summary, thumb=thumb)
+    try:
+        rating = float(page.xpath(c.RATING_PATTERN)[0].split(" out of ", 1)[0]) * 2
+        pretty_duration = page.xpath(c.DURATION_PATTERN)[0].strip().split(" ", 3)
+        content_rating = page.xpath(c.CONTENT_RATING_PATTERN)[0].split("Rated ", 1)[0]
+
+        if len(pretty_duration) < 3:
+            duration = 60000 * int(pretty_duration[0])
+        else:
+            duration = 3600000 * int(pretty_duration[0]) + 60000 * int(pretty_duration[2])
+    except IndexError:
+        return VideoClipObject(title=title, summary=summary, thumb=thumb)
+
+    return VideoClipObject(title=title, summary=summary, thumb=thumb,
+                           rating=rating, duration=duration,
+                           content_rating=content_rating)
 
 
 def MediaObjectsForURL(url):
