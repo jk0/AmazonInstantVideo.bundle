@@ -39,7 +39,11 @@ IMAGE_LINK_PATTERN = ".//div[@class='img-container']/a/img/@src | .//div[@class=
 SUMMARY_PATTERN = ".//div[@id='prod-details']/div[@class='prod-synopsis']/text()"
 RATING_PATTERN = ".//span[contains(@class, 's_star_')]/@title"
 DURATION_PATTERN = ".//div[@class='prod-other']/ul/li[contains(., 'Runtime:')]/text()"
+AIRDATE_PATTERN = ".//div[@class='prod-other']/ul/li[contains(., 'Original air date:')]/text()"
 CONTENT_RATING_PATTERN = ".//span[contains(@class, 'rated_')]/@title"
+RELEASE_YEAR_PATTERN = ".//div[@class='prod-other']/ul/li[contains(., 'Release year:')]/text()"
+STUDIO_PATTERN = ".//div[@class='prod-other']/ul/li[contains(., 'Studio:')]/text()"
+DIRECTOR_PATTERN = ".//div[@class='prod-other']/ul/li[contains(., 'Directed by:')]/text()"
 
 EPISODE_BROWSE_PATTERN = "//*[contains(@class, 'episodeRow')]"
 EPISODE_ASIN_PATTERN = ".//@asin"

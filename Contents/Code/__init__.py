@@ -116,17 +116,12 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         if is_watchlist and not is_prime:
             continue
 
-        # NOTE(danielpunkass): We wrap the pattern matchers with try to avoid
-        # total failure if one attribute is not found for an item.
-        asin = ""
-        title = ""
-        image_link = ""
         try:
             asin = item.xpath(c.ASIN_PATTERN)[0]
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
         except IndexError:
-            pass
+            continue
 
         thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
 

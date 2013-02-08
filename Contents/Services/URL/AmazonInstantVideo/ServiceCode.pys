@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import datetime
+
 import constants as c
 
 
@@ -23,24 +25,38 @@ def MetadataObjectForURL(url):
     title = page.xpath(c.TITLE_PATTERN)[0].strip()
     summary = page.xpath(c.SUMMARY_PATTERN)[0].strip()
     image_link = page.xpath(c.IMAGE_LINK_PATTERN)[0]
-
     thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
 
-    try:
-        rating = float(page.xpath(c.RATING_PATTERN)[0].split(" out of ", 1)[0]) * 2
-        pretty_duration = page.xpath(c.DURATION_PATTERN)[0].strip().split(" ", 3)
-        content_rating = page.xpath(c.CONTENT_RATING_PATTERN)[0].split("Rated ", 1)[0]
+    video_metadata = parse_video_metadata(page)
+    episode_metadata = parse_episode_metadata(page, title)
+    movie_metadata = parse_movie_metadata(page)
 
-        if len(pretty_duration) < 3:
-            duration = 60000 * int(pretty_duration[0])
-        else:
-            duration = 3600000 * int(pretty_duration[0]) + 60000 * int(pretty_duration[2])
-    except IndexError:
-        return VideoClipObject(title=title, summary=summary, thumb=thumb)
+    if episode_metadata:
+        kwargs = {
+            "title": episode_metadata["title"] or title,
+            "summary": summary,
+            "thumb": thumb
+        }
+        kwargs = dict(kwargs.items() + video_metadata.items() + episode_metadata.items())
 
-    return VideoClipObject(title=title, summary=summary, thumb=thumb,
-                           rating=rating, duration=duration,
-                           content_rating=content_rating)
+        return EpisodeObject(**kwargs)
+    elif movie_metadata:
+        kwargs = {
+            "title": title,
+            "summary": summary,
+            "thumb": thumb
+        }
+        kwargs = dict(kwargs.items() + video_metadata.items() + movie_metadata.items())
+
+        return MovieObject(**kwargs)
+    else:
+        kwargs = {
+            "title": title,
+            "summary": summary,
+            "thumb": thumb
+        }
+
+        return MovieObject(**kwargs)
 
 
 def MediaObjectsForURL(url):
@@ -48,7 +64,12 @@ def MediaObjectsForURL(url):
         MediaObject(
             protocol="webkit",
             parts=[
-                PartObject(key=Callback(PlayVideo, url=url))
+                PartObject(
+                    key=Callback(PlayVideo, url=url),
+                    streams=[
+                        AudioStreamObject(language_code=Locale.Language.English)
+                    ]
+                )
             ]
         )
     ]
@@ -57,3 +78,66 @@ def MediaObjectsForURL(url):
 @indirect
 def PlayVideo(url):
     return IndirectResponse(VideoClipObject, key=WebVideoURL(url))
+
+
+def parse_video_metadata(page):
+    try:
+        rating = float(page.xpath(c.RATING_PATTERN)[0].split(" out of ", 1)[0]) * 2
+        pretty_duration = page.xpath(c.DURATION_PATTERN)[0].strip().split(" ", 3)
+        content_rating = page.xpath(c.CONTENT_RATING_PATTERN)[0].split("Rated ", 1)[0]
+    except (IndexError, ValueError):
+        return None
+
+    if len(pretty_duration) < 3:
+        duration = 60000 * int(pretty_duration[0])
+    else:
+        duration = 3600000 * int(pretty_duration[0]) + 60000 * int(pretty_duration[2])
+
+    return {
+        "rating": rating,
+        "content_rating": content_rating,
+        "duration": duration
+    }
+
+
+def parse_episode_metadata(page, title):
+    try:
+        show_info = title.split(" Season ", 1)
+        show_name = show_info[0]
+
+        episode_info = show_info[1].split(", ", 1)
+
+        season = int(episode_info[0])
+        episode_number, episode_name = episode_info[1].split("Ep. ", 1)[1].split(" ", 1)
+        episode_number = int(episode_number)
+
+        air_date = pretty_duration = page.xpath(c.AIRDATE_PATTERN)[0].strip().split(" ", 3)
+        air_date = datetime.datetime.strptime(" ".join(air_date), '%B %d, %Y')
+    except (IndexError, ValueError):
+        return None
+
+    return {
+        "title": episode_name[1:-1],
+        "show": show_name,
+        "originally_available_at": air_date,
+        "season": season,
+        "index": episode_number
+    }
+
+
+def parse_movie_metadata(page):
+    try:
+        release_year = int(page.xpath(c.RELEASE_YEAR_PATTERN)[0])
+        studio = page.xpath(c.STUDIO_PATTERN)[0].strip()
+    except (IndexError, ValueError):
+        return None
+
+    directors = []
+    for director in page.xpath(c.DIRECTOR_PATTERN)[0].split(","):
+        directors.append(director.strip())
+
+    return {
+        "year": release_year,
+        "studio": studio,
+        "directors": directors
+    }
