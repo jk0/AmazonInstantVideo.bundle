@@ -125,7 +125,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
             asin = item.xpath(c.ASIN_PATTERN)[0]
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
-        except Exception:
+        except IndexError:
             pass
 
         thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
