@@ -31,31 +31,23 @@ def MetadataObjectForURL(url):
     episode_metadata = parse_episode_metadata(page, title)
     movie_metadata = parse_movie_metadata(page)
 
-    if episode_metadata:
-        kwargs = {
-            "title": episode_metadata["title"] or title,
-            "summary": summary,
-            "thumb": thumb
-        }
-        kwargs = dict(kwargs.items() + video_metadata.items() + episode_metadata.items())
+    kwargs = {
+        "title": title,
+        "summary": summary,
+        "thumb": thumb
+    }
+
+    if video_metadata and episode_metadata:
+        kwargs.update(video_metadata)
+        kwargs.update(episode_metadata)
 
         return EpisodeObject(**kwargs)
-    elif movie_metadata:
-        kwargs = {
-            "title": title,
-            "summary": summary,
-            "thumb": thumb
-        }
-        kwargs = dict(kwargs.items() + video_metadata.items() + movie_metadata.items())
+    elif video_metadata and movie_metadata:
+        kwargs.update(video_metadata)
+        kwargs.update(movie_metadata)
 
         return MovieObject(**kwargs)
     else:
-        kwargs = {
-            "title": title,
-            "summary": summary,
-            "thumb": thumb
-        }
-
         return MovieObject(**kwargs)
 
 
@@ -85,13 +77,13 @@ def parse_video_metadata(page):
         rating = float(page.xpath(c.RATING_PATTERN)[0].split(" out of ", 1)[0]) * 2
         pretty_duration = page.xpath(c.DURATION_PATTERN)[0].strip().split(" ", 3)
         content_rating = page.xpath(c.CONTENT_RATING_PATTERN)[0].split("Rated ", 1)[0]
+
+        if len(pretty_duration) < 3:
+            duration = 60000 * int(pretty_duration[0])
+        else:
+            duration = 3600000 * int(pretty_duration[0]) + 60000 * int(pretty_duration[2])
     except (IndexError, ValueError):
         return None
-
-    if len(pretty_duration) < 3:
-        duration = 60000 * int(pretty_duration[0])
-    else:
-        duration = 3600000 * int(pretty_duration[0]) + 60000 * int(pretty_duration[2])
 
     return {
         "rating": rating,
@@ -129,12 +121,12 @@ def parse_movie_metadata(page):
     try:
         release_year = int(page.xpath(c.RELEASE_YEAR_PATTERN)[0])
         studio = page.xpath(c.STUDIO_PATTERN)[0].strip()
+
+        directors = []
+        for director in page.xpath(c.DIRECTOR_PATTERN)[0].split(","):
+            directors.append(director.strip())
     except (IndexError, ValueError):
         return None
-
-    directors = []
-    for director in page.xpath(c.DIRECTOR_PATTERN)[0].split(","):
-        directors.append(director.strip())
 
     return {
         "year": release_year,
