@@ -38,14 +38,14 @@ def MainMenu():
 
     if logged_in:
         if is_prime:
-            oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies"), title="Browse Movies"))
+            oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movie"), title="Browse Movies"))
             oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv"), title="Browse TV"))
 
         oc.add(DirectoryObject(key=Callback(LibraryMenu), title="Your Library"))
 
         if is_prime:
             oc.add(DirectoryObject(key=Callback(WatchlistMenu), title="Your Watchlist"))
-            oc.add(DirectoryObject(key=Callback(SearchMenu), title="Search", thumb=R(c.PLUGIN_ICON_SEARCH)))
+            oc.add(InputDirectoryObject(key=Callback(Search), title="Search", prompt="Search for a Movie or TV Show", thumb=R(c.PLUGIN_ICON_SEARCH)))
 
     oc.add(PrefsObject(title="Preferences"))
 
@@ -56,7 +56,7 @@ def MainMenu():
 def LibraryMenu():
     oc = ObjectContainer(title2="Your Library")
 
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_library=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movie", is_library=True), title="Movies"))
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
 
     return oc
@@ -66,25 +66,20 @@ def LibraryMenu():
 def WatchlistMenu():
     oc = ObjectContainer(title2="Your Watchlist")
 
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movies", is_watchlist=True), title="Movies"))
+    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movie", is_watchlist=True), title="Movies"))
     oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_watchlist=True), title="TV"))
-
-    return oc
-
-
-@route("/video/amazoninstantvideo/searchmenu")
-def SearchMenu():
-    oc = ObjectContainer(title2="Search")
-
-    oc.add(InputDirectoryObject(key=Callback(Search, video_type="movies"), title="Search Movies", prompt="Search for a Movie"))
-    oc.add(InputDirectoryObject(key=Callback(Search, video_type="tv"), title="Search TV", prompt="Search for a TV show"))
 
     return oc
 
 
 @route("/video/amazoninstantvideo/browsemenu", is_library=bool, is_watchlist=bool)
 def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
-    title = "Browse TV Shows" if video_type == "tv" else "Browse Movies"
+    if video_type == "search":
+        title = "Search for '%s'" % query.title()
+    elif video_type == "tv":
+        title = "Browse TV Shows"
+    else:
+        title = "Browse Movies"
 
     if query:
         if not pagination_url:
@@ -98,7 +93,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
     elif is_watchlist:
         title = title + " (Watchlist)"
         browse_url = c.ACCOUNT_URL % ("watchlist", video_type)
-    elif video_type == "movies":
+    elif video_type == "movie":
         browse_url = c.MOVIES_URL
     else:
         browse_url = c.TV_URL
@@ -125,11 +120,12 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
 
         thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
 
-        if video_type == "movies":
+        # FIXME(jk0): This is a terrible solution!
+        if video_type == "tv" or "season" in title.lower():
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
+        else:
             url = c.MINI_PLAYER_URL % asin
             oc.add(MovieObject(url=url, title=title, thumb=thumb))
-        else:
-            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
 
     pagination_url = html.xpath(c.PAGINATION_PATTERN)
     if len(pagination_url) > 0:
@@ -142,8 +138,8 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
 
 
 @route("/video/amazoninstantvideo/search")
-def Search(query, video_type):
-    return BrowseMenu(video_type=video_type, query=query)
+def Search(query):
+    return BrowseMenu(video_type="search", query=query)
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)

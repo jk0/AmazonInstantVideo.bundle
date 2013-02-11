@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<site site="http://.*\.amazon\.com"
+<site site="http://www.amazon.com"
       plugin="http://.*\.images-amazon\.com/images/G/01/digital/video/streaming/.*?/UnboxScreeningRoomClient\._.*?\.swf"
       initialState="open"
       finalState="close"
-      windowWidth="1280"
-      windowHeight="720"
-      agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.57 Safari/537.17"
       manualLock="true"
       identifier="com.plexapp.plugins.amazoninstantvideo"
       version="1.0">
-
-    <crop x="0" y="0" width="0" height="0" />
 
     <state name="open">
         <event>
@@ -30,10 +25,9 @@
                 <title matches="^Amazon$" />
             </condition>
             <action>
-                <pause time="500" />
-                <run script="document.getElementsByName('email')[0].value='{$username}'" />
-                <run script="document.getElementsByName('password')[0].value='{$password}'" />
-                <run script="document.forms[0].submit()" />
+                <run script="document.getElementsByName('email')[0].value='${username}';" />
+                <run script="document.getElementsByName('password')[0].value='${password}';" />
+                <run script="document.forms[0].submit();" />
                 <pause time="500" />
                 <goto state="reload" />
             </action>
@@ -52,7 +46,7 @@
     <state name="reload">
         <event>
             <condition>
-                <pref name="password" exists="true"/>
+                <javascript script="true ? 1 : 0" matches="1" />
             </condition>
             <action>
                 <visit url="${url}" />
@@ -78,10 +72,10 @@
     <state name="playing">
         <event>
             <condition>
-                <command name="pause"/>
+                <command name="pause" />
             </condition>
             <action>
-                <run script="$.avodPause()"/>
+                <run script="$.avodPause()" />
                 <goto state="paused" />
             </action>
         </event>
@@ -91,7 +85,7 @@
                 <command name="bigstep+" />
             </condition>
             <action>
-                <run script="$.setPlayheadTime($.getPlayheadTime()+30)" />
+                <run script="$.setPlayheadTime($.getPlayheadTime() + 30)" />
             </action>
         </event>
 
@@ -100,7 +94,7 @@
                 <command name="bigstep-" />
             </condition>
             <action>
-                <run script="$.setPlayheadTime($.getPlayheadTime()-30)" />
+                <run script="$.setPlayheadTime($.getPlayheadTime() - 30)" />
             </action>
         </event>
 
@@ -109,7 +103,7 @@
                 <command name="smallstep+" />
             </condition>
             <action>
-                <run script="$.setPlayheadTime($.getPlayheadTime()+10)" />
+                <run script="$.setPlayheadTime($.getPlayheadTime() + 10)" />
             </action>
         </event>
 
@@ -118,7 +112,7 @@
                 <command name="smallstep-" />
             </condition>
             <action>
-                <run script="$.setPlayheadTime($.getPlayheadTime()-10)" />
+                <run script="$.setPlayheadTime($.getPlayheadTime() - 10)" />
             </action>
         </event>
     </state>
@@ -126,10 +120,10 @@
     <state name="paused">
         <event>
             <condition>
-                <command name="play"/>
+                <command name="play" />
             </condition>
             <action>
-                <run script="$.avodPlay()"/>
+                <run script="$.avodPlay()" />
                 <goto state="playing" />
             </action>
         </event>
@@ -138,7 +132,7 @@
     <state name="close">
         <event>
             <condition>
-                <pref name="password" exists="true"/>
+                <javascript script="true ? 1 : 0" matches="1" />
             </condition>
             <action>
                 <run script="client.exitVideoPlayer();" />

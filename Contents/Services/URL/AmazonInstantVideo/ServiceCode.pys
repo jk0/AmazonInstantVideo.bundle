@@ -47,8 +47,8 @@ def MetadataObjectForURL(url):
         kwargs.update(movie_metadata)
 
         return MovieObject(**kwargs)
-    else:
-        return MovieObject(**kwargs)
+
+    return MovieObject(**kwargs)
 
 
 def MediaObjectsForURL(url):
