@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 import datetime
+import re
 import time
 
 import constants as c
@@ -20,8 +21,7 @@ import constants as c
 
 def MetadataObjectForURL(url):
     asin = url.split("=", 1)[1]
-    url = c.AMAZON_URL + "/dp/" + asin
-    page = HTML.ElementFromURL(url)
+    page = HTML.ElementFromURL(c.AMAZON_URL + "/dp/" + asin)
 
     title = page.xpath(c.TITLE_PATTERN)[0].strip()
     summary = page.xpath(c.SUMMARY_PATTERN)[0].strip()
@@ -70,10 +70,8 @@ def MediaObjectsForURL(url):
 
 @indirect
 def PlayVideo(url):
-    flash_vars = parse_flash_vars(url)
-    rtmp_url, clip, swf_url = prepare_rtmp_info(flash_vars)
-
-    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip, swf_url=swf_url))
+    rtmp_url, clip = parse_rtmp_data(url)
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_url, clip=clip))
 
 
 def parse_video_metadata(page):
@@ -139,38 +137,19 @@ def parse_movie_metadata(page):
     }
 
 
-def parse_flash_vars(url):
-    page_content = HTTP.Request(url, follow_redirects=False, immediate=True).content
+def parse_rtmp_data(url):
+    page = HTTP.Request(url, immediate=True).content
 
-    flash = Regex("'flashVars', '(.*?)' \+ new Date\(\)\.getTime\(\)\+ '(.*?)'", Regex.DOTALL).findall(page_content)
-    flash = (flash[0][0] + flash[0][1]).split("&")
+    asin = url.split("=", 1)[1]
+    customerID = re.search("&customer=(.*?)&", page).group(1)
+    deviceID = customerID + str(int(time.time() * 1000)) + asin
+    swf_url = re.search("avodSwfUrl = '(.*?)'\;", page).group(1)
+    token = re.search("&token=(.*?)&", page).group(1)
 
-    flash_vars = {
-        "firmware": "WIN%2010,0,181,14%20PlugIn",
-        "url": url,
-        "swf_url": Regex("avodSwfUrl = '(.*?)'\;").findall(page_content)[0]
-    }
+    stream_url = "https://atv-ps.amazon.com/cdp/catalog/GetStreamingUrlSets?deviceTypeID=%s&version=%s&asin=%s&firmware=%s&customerID=%s&token=%s&format=%s&deviceID=%s" % (
+            "A13Q6A55DBZB7M", "1", asin, "WIN%2010,0,181,14%20PlugIn", customerID, token, "json", deviceID)
 
-    for var in flash:
-        var = var.split("=")
-        if var[0] == "token":
-            flash_vars[var[0]] = var[1]
-        elif var[0] == "customer":
-            flash_vars["customerID"] = var[1]
-        elif var[0] == "ASIN":
-            flash_vars["asin"] = var[1]
-
-    flash_vars["deviceID"] = flash_vars["customerID"] + str(int(time.time() * 1000)) + flash_vars["asin"]
-
-    return flash_vars
-
-
-def prepare_rtmp_info(flash_vars):
-    stream_url = "https://atv-ps.amazon.com/cdp/catalog/GetStreamingUrlSets?deviceTypeID=A13Q6A55DBZB7M&version=1&asin=%(asin)s&firmware=%(firmware)s&customerID=%(customerID)s&token=%(token)s&format=json&deviceID=%(deviceID)s" % flash_vars
-
-    cookies = HTTP.CookiesForURL(flash_vars["url"])
-
-    stream_data = JSON.ObjectFromURL(stream_url, headers={"Cookie": cookies})
+    stream_data = JSON.ObjectFromURL(stream_url)
     stream_json = stream_data["message"]["body"]["urlSets"]["streamingURLInfoSet"][0]["streamingURLInfo"]
 
     streams = []
@@ -182,21 +161,13 @@ def prepare_rtmp_info(flash_vars):
     streams.sort(key=lambda x: x[0], reverse=True)
 
     rtmp_url = streams[0][1]
-    protocol = rtmp_url.split("://")
-    path = protocol[1].split("/")
-    hostname = path[0]
-    app_name = protocol[1].split(hostname + "/")[1].split("/")[0]
-    stream_auth = rtmp_url.split(app_name + "/")[1].split("?")
-    stream = stream_auth[0].replace(".mp4", "")
-    auth = stream_auth[1]
-    identurl = "http://" + hostname + "/fcs/ident"
-    ident = HTTP.Request(identurl).content
-    ip = Regex("<fcs><ip>(.+?)</ip></fcs>").findall(ident)[0]
-    base_rtmp = "rtmpe://" + ip + ":1935/" + app_name + "?_fcs_vhost=" + hostname + "&ovpfv=2.1.4&" + auth
+    protocol = rtmp_url.split("//", 1)[1]
+    hostname = protocol.split("/", 1)[0]
+    path = protocol.split("/", 1)[1]
 
-    final_url = base_rtmp
-    final_url += " playpath=" + stream
-    final_url += " pageurl=" + flash_vars["url"]
-    final_url += " swfurl=" + flash_vars["swf_url"] + " swfvfy=true"
+    auth = path.split("ondemand/")[1].split("?")
+    clip = auth[0].replace(".mp4", "")
 
-    return final_url, stream, flash_vars["swf_url"]
+    rtmp_stream = "rtmpe://%s:1935/ondemand?_fcs_vhost=%s&ovpfv=2.1.4&%s playpath=%s pageurl=%s swfurl=%s swfvfy=true" % (hostname, hostname, auth[1], clip, url, swf_url)
+
+    return rtmp_stream, clip
