@@ -19,20 +19,24 @@ def authenticate():
     params = {
         "action": "sign-in",
         "protocol": "https",
-        "sessionId": get_session_id(),
         "email": Prefs["username"],
         "password": Prefs["password"]
     }
 
-    HTTP.Request(c.AMAZON_URL + "/gp/flex/sign-in/select.html", values=params,
-                 immediate=True)
+    page = HTML.ElementFromURL(c.AMAZON_URL + "/gp/flex/sign-in/select.html",
+                               values=params)
+
+    Dict["amazon_is_account_prime"] = False
+    if page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)[0].endswith("_prmlogo"):
+        Dict["amazon_is_account_prime"] = True
+
+    Dict.Save()
 
     return logged_in()
 
 
 def logged_in():
     cookies = HTTP.CookiesForURL(c.AMAZON_URL).split(";")
-
     for cookie in cookies:
         if "x-main" in cookie:
             return True
@@ -41,16 +45,4 @@ def logged_in():
 
 
 def is_prime():
-    html = HTML.ElementFromURL(c.AMAZON_URL)
-
-    return html.xpath(c.IS_ACCOUNT_PRIME_PATTERN)[0].endswith("_prmlogo")
-
-
-def get_session_id():
-    cookies = HTTP.CookiesForURL(c.AMAZON_URL).split(";")
-
-    for cookie in cookies:
-        cookie = cookie.split("=", 1)
-
-        if cookie[0].strip() == "session-id":
-            return cookie[1].strip()
+    return Dict["amazon_is_account_prime"]

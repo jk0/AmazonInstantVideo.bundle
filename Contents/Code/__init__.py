@@ -31,7 +31,10 @@ def Start():
 
 @handler("/video/amazoninstantvideo", c.PLUGIN_TITLE, thumb=c.PLUGIN_ICON_DEFAULT, art=c.PLUGIN_ART)
 def MainMenu():
-    logged_in = account.authenticate()
+    logged_in = account.logged_in()
+    if not logged_in:
+        logged_in = account.authenticate()
+
     is_prime = account.is_prime()
 
     oc = ObjectContainer()
