@@ -28,6 +28,7 @@ MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A28589050
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955011&keywords=%s"
 
+IS_ACCOUNT_PRIME_PATTERN = "//div[@id='nav-cross-shop']/a/@href"
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
 IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
 IS_OWNED_PATTERN = ".//td[last()-2]/text()"

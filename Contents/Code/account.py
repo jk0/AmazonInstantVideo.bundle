@@ -1,4 +1,4 @@
-#   Copyright 2012 Josh Kearney
+#   Copyright 2012-2013 Josh Kearney
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -12,49 +12,44 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+c = SharedCodeService.constants
+
 
 def authenticate():
-    amazon_url = "https://www.amazon.com"
-
     params = {
         "action": "sign-in",
         "protocol": "https",
-        "sessionId": get_session_id(amazon_url),
+        "sessionId": get_session_id(),
         "email": Prefs["username"],
         "password": Prefs["password"]
     }
 
-    HTTP.Request(amazon_url + "/gp/flex/sign-in/select.html", values=params,
+    HTTP.Request(c.AMAZON_URL + "/gp/flex/sign-in/select.html", values=params,
                  immediate=True)
-
-    Dict["amazoninstantvideo_logged_in"] = False
-    for cookie in HTTP.CookiesForURL(amazon_url).split(";"):
-        if "x-main" in cookie:
-            Dict["amazoninstantvideo_logged_in"] = True
-
-    Dict["amazoninstantvideo_is_prime"] = False
-    html = HTML.ElementFromURL(amazon_url)
-    if html.xpath("//div[@id='nav-cross-shop']/a/@href")[0].endswith("_prmlogo"):
-        Dict["amazoninstantvideo_is_prime"] = True
-
-    Dict.Save()
 
     return logged_in()
 
 
 def logged_in():
-    return Dict["amazoninstantvideo_logged_in"]
+    cookies = HTTP.CookiesForURL(c.AMAZON_URL).split(";")
+
+    for cookie in cookies:
+        if "x-main" in cookie:
+            return True
+
+    return False
 
 
 def is_prime():
-    return Dict["amazoninstantvideo_is_prime"]
+    html = HTML.ElementFromURL(c.AMAZON_URL)
+
+    return html.xpath(c.IS_ACCOUNT_PRIME_PATTERN)[0].endswith("_prmlogo")
 
 
-def get_session_id(amazon_url):
-    cookie_url = amazon_url + "/gp/sign-in.html"
-    HTTP.Request(cookie_url).content
+def get_session_id():
+    cookies = HTTP.CookiesForURL(c.AMAZON_URL).split(";")
 
-    for cookie in HTTP.CookiesForURL(cookie_url).split(";"):
+    for cookie in cookies:
         cookie = cookie.split("=", 1)
 
         if cookie[0].strip() == "session-id":
