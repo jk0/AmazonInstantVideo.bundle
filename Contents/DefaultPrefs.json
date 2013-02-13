@@ -1,8 +1,8 @@
 [
     {
-        "id": "username",
+        "id": "email",
         "type": "text",
-        "label": "Username",
+        "label": "Email Address",
         "default": "" 
     },
     {

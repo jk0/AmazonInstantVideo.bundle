@@ -13,14 +13,15 @@
 #   limitations under the License.
 
 import datetime
+import re
+import time
 
 import constants as c
 
 
 def MetadataObjectForURL(url):
-    asin = url.split("=", 1)[1]
-    url = c.AMAZON_URL + "/dp/" + asin
-    page = HTML.ElementFromURL(url)
+    asin = url.split("/")[5]
+    page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
 
     title = page.xpath(c.TITLE_PATTERN)[0].strip()
     summary = page.xpath(c.SUMMARY_PATTERN)[0].strip()
@@ -32,6 +33,7 @@ def MetadataObjectForURL(url):
     movie_metadata = parse_movie_metadata(page)
 
     kwargs = {
+        "source_title": c.PLUGIN_TITLE,
         "title": title,
         "summary": summary,
         "thumb": thumb
@@ -54,7 +56,7 @@ def MetadataObjectForURL(url):
 def MediaObjectsForURL(url):
     return [
         MediaObject(
-            protocol="webkit",
+            protocol="rtmp",
             parts=[
                 PartObject(
                     key=Callback(PlayVideo, url=url),
@@ -69,7 +71,39 @@ def MediaObjectsForURL(url):
 
 @indirect
 def PlayVideo(url):
-    return IndirectResponse(VideoClipObject, key=WebVideoURL(url))
+    page = HTTP.Request(url, immediate=True).content
+
+    asin = url.split("/")[5]
+    customer_id = re.search(c.CUSTOMER_ID_PATTERN, page).group(1)
+    device_id = customer_id + str(int(time.time() * 1000)) + asin
+    swf_url = re.search(c.SWF_URL_PATTERN, page).group(1)
+    token = re.search(c.TOKEN_PATTERN, page).group(1)
+
+    stream_url = "https://atv-ps.amazon.com/cdp/catalog/GetStreamingUrlSets?deviceTypeID=%s&version=%s&asin=%s&firmware=%s&customerID=%s&token=%s&format=%s&deviceID=%s" % (
+            "A13Q6A55DBZB7M", "1", asin, "WIN%2010,0,181,14%20PlugIn", customer_id, token, "json", device_id)
+
+    stream_data = JSON.ObjectFromURL(stream_url)
+    stream_json = stream_data["message"]["body"]["urlSets"]["streamingURLInfoSet"][0]["streamingURLInfo"]
+
+    streams = []
+    for stream in stream_json:
+        if stream["drm"] == "NONE":
+            streams.append((int(stream["bitrate"]), stream["url"]))
+
+    # NOTE(jk0): Use the highest bitrate available.
+    streams.sort(key=lambda x: x[0], reverse=True)
+
+    rtmp_url = streams[0][1]
+    protocol = rtmp_url.split("//", 1)[1]
+    hostname = protocol.split("/", 1)[0]
+    path = protocol.split("/", 1)[1]
+
+    auth = path.split("ondemand/")[1].split("?")
+    clip = auth[0].replace(".mp4", "")
+
+    rtmp_stream = "rtmpe://%s:1935/ondemand?%s playpath=%s pageurl=%s swfurl=%s swfvfy=true" % (hostname, auth[1], clip, url, swf_url)
+
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_stream, clip=clip))
 
 
 def parse_video_metadata(page):
