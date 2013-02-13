@@ -8,11 +8,11 @@
         <dict>
             <key>URLPatterns</key>
             <array>
-                <string>http://.*amazon\.com/gp/video/streaming/.+</string>
+                <string>https?://www.amazon.com/gp/product/.+</string>
             </array>
             <key>TestURLs</key>
             <array>
-                <string>http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=B000H4QD1O</string>
+                <string>http://www.amazon.com/gp/product/B000H4QD1O/</string>
             </array>
         </dict>
     </dict>

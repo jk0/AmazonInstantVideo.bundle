@@ -19,7 +19,7 @@ def authenticate():
     params = {
         "action": "sign-in",
         "protocol": "https",
-        "email": Prefs["username"],
+        "email": Prefs["email"],
         "password": Prefs["password"]
     }
 
@@ -36,7 +36,11 @@ def authenticate():
 
 
 def logged_in():
-    cookies = HTTP.CookiesForURL(c.AMAZON_URL).split(";")
+    try:
+        cookies = HTTP.CookiesForURL(c.AMAZON_URL).split(";")
+    except AttributeError:
+        return False
+
     for cookie in cookies:
         if "x-main" in cookie:
             return True

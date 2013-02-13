@@ -127,8 +127,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
         if video_type == "tv" or "season" in title.lower():
             oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
         else:
-            url = c.MINI_PLAYER_URL % asin
-            oc.add(MovieObject(url=url, title=title, thumb=thumb))
+            oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
 
     pagination_url = html.xpath(c.PAGINATION_PATTERN)
     if len(pagination_url) > 0:
@@ -160,8 +159,6 @@ def TVSeason(asin, title, thumb, is_library):
             title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip()
             summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
 
-            url = c.MINI_PLAYER_URL % asin
-
-            oc.add(EpisodeObject(url=url, title=title, summary=summary, thumb=thumb))
+            oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
 
     return oc
