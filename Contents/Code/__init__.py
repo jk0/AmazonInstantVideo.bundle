@@ -15,6 +15,7 @@
 import account
 
 
+common = SharedCodeService.common
 c = SharedCodeService.constants
 
 
@@ -66,8 +67,8 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
     if pagination_url:
         browse_url = c.AMAZON_URL + pagination_url
 
-    html = HTML.ElementFromURL(browse_url)
-    items = html.xpath(c.BROWSE_PATTERN)
+    page = HTML.ElementFromURL(browse_url)
+    items = page.xpath(c.BROWSE_PATTERN)
 
     oc = ObjectContainer(title2=title)
 
@@ -77,16 +78,19 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
 
+            for replacement in c.IMAGE_LINK_REPLACE:
+                image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
+
             thumb = Resource.ContentsOfURLWithFallback(url=image_link)
         except IndexError:
             continue
 
-        if browse_type == "tv" or "season" in title.lower():
-            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
+        if browse_type == "tv" or common.any(x in title for x in c.SEASON_SYNONYMS):
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
         else:
             oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
 
-    pagination_url = html.xpath(c.PAGINATION_PATTERN)
+    pagination_url = page.xpath(c.PAGINATION_PATTERN)
     if len(pagination_url) > 0:
         oc.add(NextPageObject(key=Callback(BrowseMenu, browse_type=browse_type, pagination_url=pagination_url[0]), title="Next..."))
 
@@ -97,12 +101,9 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)
-def TVSeason(asin, title, is_library):
-    html = HTML.ElementFromURL(c.PRODUCT_URL % asin)
-    episodes = html.xpath(c.EPISODE_BROWSE_PATTERN)
-
-    image_link = html.xpath(c.IMAGE_LINK_PATTERN)[0]
-    thumb = Resource.ContentsOfURLWithFallback(url=image_link)
+def TVSeason(asin, title, thumb, is_library):
+    page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
+    episodes = page.xpath(c.EPISODE_BROWSE_PATTERN)
 
     oc = ObjectContainer(title2=title)
 

@@ -12,16 +12,17 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import common
 import constants as c
 
 
 def Search(query):
     search_url = c.SEARCH_URL % query.replace(" ", "%20")
 
-    html = HTML.ElementFromURL(search_url)
-    items = html.xpath(c.BROWSE_PATTERN)
+    page = HTML.ElementFromURL(search_url)
+    items = page.xpath(c.BROWSE_PATTERN)
 
-    oc = ObjectContainer()
+    oc = ObjectContainer(title2="Search for '%s'" % query.title())
 
     for item in items:
         try:
@@ -29,25 +30,30 @@ def Search(query):
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
 
+            for replacement in c.IMAGE_LINK_REPLACE:
+                image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
+
             thumb = Resource.ContentsOfURLWithFallback(url=image_link)
         except IndexError:
             continue
 
-        url = c.PRODUCT_URL % asin
-
-        if "season" in title.lower():
+        if common.any(x in title for x in c.SEASON_SYNONYMS):
             oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title), rating_key=asin, title=title, thumb=thumb))
         else:
-            oc.add(MovieObject(url=url, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
+            oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
 
     return oc
 
 
 def TVSeason(asin, title):
-    html = HTML.ElementFromURL(c.PRODUCT_URL % asin)
-    episodes = html.xpath(c.EPISODE_BROWSE_PATTERN)
+    page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
+    episodes = page.xpath(c.EPISODE_BROWSE_PATTERN)
 
-    image_link = html.xpath(c.IMAGE_LINK_PATTERN)[0]
+    image_link = page.xpath(c.IMAGE_LINK_PATTERN)[0]
+
+    for replacement in c.IMAGE_LINK_REPLACE:
+        image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
+
     thumb = Resource.ContentsOfURLWithFallback(url=image_link)
 
     oc = ObjectContainer(title2=title)

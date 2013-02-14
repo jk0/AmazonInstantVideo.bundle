@@ -17,6 +17,9 @@ PLUGIN_TITLE = "Amazon Instant Video"
 AMAZON_URL = "https://www.amazon.com"
 PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 
+IMAGE_LINK_REPLACE = ["._SS160_.jpg", "._AA160_.jpg", "._SX140_CR0,0,140,105_.jpg", "._CR0,12,333,476_SP140,200,50,C,0,0,0__.jpg"]
+IMAGE_LINK_REPLACE_WITH = ".jpg"
+
 LIBRARY_URL = AMAZON_URL + "/gp/video/library?show=all"
 WATCHLIST_URL = AMAZON_URL + "/gp/video/watchlist/prime?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
@@ -31,6 +34,8 @@ IS_ACCOUNT_PRIME_PATTERN = "//div[@id='nav-cross-shop']/a/@href"
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
 IS_OWNED_PATTERN = ".//td[last()-2]/text()"
 PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
+
+SEASON_SYNONYMS = ["Season", "Volume"]
 
 ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
 TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text() | .//div[@class='data']/h3/a/text() | .//div[@id='prod-details']/h1/text()"
