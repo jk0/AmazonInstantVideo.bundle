@@ -24,7 +24,6 @@ def Start():
 
     DirectoryObject.thumb = R(c.PLUGIN_ICON_DEFAULT)
     VideoClipObject.thumb = R(c.PLUGIN_ICON_DEFAULT)
-    InputDirectoryObject.thumb = R(c.PLUGIN_ICON_SEARCH)
     PrefsObject.thumb = R(c.PLUGIN_ICON_PREFS)
     NextPageObject.thumb = R(c.PLUGIN_ICON_NEXT)
 
@@ -48,7 +47,7 @@ def MainMenu():
 
         if is_prime:
             oc.add(DirectoryObject(key=Callback(BrowseMenu, is_watchlist=True), title="Your Watchlist"))
-            oc.add(InputDirectoryObject(key=Callback(Search), title="Search", prompt="Search for a Movie or TV Show", thumb=R(c.PLUGIN_ICON_SEARCH)))
+            oc.add(SearchDirectoryObject(title="Search", prompt="Search for a Movie or TV Show"))
 
     oc.add(PrefsObject(title="Preferences"))
 
@@ -56,15 +55,8 @@ def MainMenu():
 
 
 @route("/video/amazoninstantvideo/browsemenu", is_library=bool, is_watchlist=bool)
-def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, query=None, pagination_url=None):
-    if query:
-        title = "Search for '%s'" % query.title()
-        if not pagination_url:
-            # NOTE(jk0): Only build a query URL if we're performing a new
-            # search and not using pagination on a previous search.
-            query = query.replace(" ", "%20")
-            browse_url = c.SEARCH_URL % query
-    elif is_library:
+def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, pagination_url=None):
+    if is_library:
         title = "Your Library"
         browse_url = c.LIBRARY_URL
     elif is_watchlist:
@@ -102,17 +94,12 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, query=Non
 
     pagination_url = html.xpath(c.PAGINATION_PATTERN)
     if len(pagination_url) > 0:
-        oc.add(NextPageObject(key=Callback(BrowseMenu, browse_type=browse_type, query=query, pagination_url=pagination_url[0]), title="Next..."))
+        oc.add(NextPageObject(key=Callback(BrowseMenu, browse_type=browse_type, pagination_url=pagination_url[0]), title="Next..."))
 
     if len(oc) == 0:
         return ObjectContainer(header="No Results", message="No results were found.")
 
     return oc
-
-
-@route("/video/amazoninstantvideo/search")
-def Search(query):
-    return BrowseMenu(query=query)
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)

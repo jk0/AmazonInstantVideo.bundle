@@ -16,6 +16,14 @@
             </array>
         </dict>
     </dict>
+    <key>Search</key>
+    <dict>
+        <key>AmazonInstantVideo</key>
+        <dict>
+            <key>Identifier</key>
+            <string>com.plexapp.plugins.amazoninstantvideo</string>
+        </dict>
+    </dict>
     <key>PlexFrameworkFlags</key>
     <array>
         <string>UseRealRTMP</string>

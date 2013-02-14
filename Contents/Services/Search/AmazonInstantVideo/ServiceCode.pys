@@ -1,0 +1,62 @@
+#   Copyright 2013 Josh Kearney
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+import constants as c
+
+
+def Search(query):
+    search_url = c.SEARCH_URL % query.replace(" ", "%20")
+
+    html = HTML.ElementFromURL(search_url)
+    items = html.xpath(c.BROWSE_PATTERN)
+
+    oc = ObjectContainer()
+
+    for item in items:
+        try:
+            asin = item.xpath(c.ASIN_PATTERN)[0]
+            title = item.xpath(c.TITLE_PATTERN)[0].strip()
+            image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
+
+            thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
+        except IndexError:
+            continue
+
+        url = c.PRODUCT_URL % asin
+
+        if "season" in title.lower():
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title), rating_key=asin, title=title, thumb=thumb))
+        else:
+            oc.add(MovieObject(url=url, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
+
+    return oc
+
+
+def TVSeason(asin, title):
+    html = HTML.ElementFromURL(c.PRODUCT_URL % asin)
+    episodes = html.xpath(c.EPISODE_BROWSE_PATTERN)
+
+    image_link = html.xpath(c.IMAGE_LINK_PATTERN)[0]
+    thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
+
+    oc = ObjectContainer(title2=title)
+
+    for episode in episodes:
+        asin = episode.xpath(c.EPISODE_ASIN_PATTERN)[0]
+        title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip()
+        summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
+
+        oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
+
+    return oc
