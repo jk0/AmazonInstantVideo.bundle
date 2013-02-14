@@ -29,7 +29,7 @@ def Search(query):
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
 
-            thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
+            thumb = Resource.ContentsOfURLWithFallback(url=image_link)
         except IndexError:
             continue
 
@@ -48,7 +48,7 @@ def TVSeason(asin, title):
     episodes = html.xpath(c.EPISODE_BROWSE_PATTERN)
 
     image_link = html.xpath(c.IMAGE_LINK_PATTERN)[0]
-    thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
+    thumb = Resource.ContentsOfURLWithFallback(url=image_link)
 
     oc = ObjectContainer(title2=title)
 

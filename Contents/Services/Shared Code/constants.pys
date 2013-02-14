@@ -14,11 +14,6 @@
 
 PLUGIN_TITLE = "Amazon Instant Video"
 
-PLUGIN_ICON_DEFAULT = "icon-default.png"
-PLUGIN_ICON_PREFS = "icon-prefs.png"
-PLUGIN_ICON_NEXT = "icon-next.png"
-PLUGIN_ART = "art-default.jpg"
-
 AMAZON_URL = "https://www.amazon.com"
 PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 

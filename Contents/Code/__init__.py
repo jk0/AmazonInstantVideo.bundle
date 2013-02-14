@@ -20,15 +20,9 @@ c = SharedCodeService.constants
 
 def Start():
     ObjectContainer.title1 = c.PLUGIN_TITLE
-    ObjectContainer.art = R(c.PLUGIN_ART)
-
-    DirectoryObject.thumb = R(c.PLUGIN_ICON_DEFAULT)
-    VideoClipObject.thumb = R(c.PLUGIN_ICON_DEFAULT)
-    PrefsObject.thumb = R(c.PLUGIN_ICON_PREFS)
-    NextPageObject.thumb = R(c.PLUGIN_ICON_NEXT)
 
 
-@handler("/video/amazoninstantvideo", c.PLUGIN_TITLE, thumb=c.PLUGIN_ICON_DEFAULT, art=c.PLUGIN_ART)
+@handler("/video/amazoninstantvideo", c.PLUGIN_TITLE)
 def MainMenu():
     logged_in = account.logged_in()
     if not logged_in:
@@ -83,12 +77,12 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
 
-            thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
+            thumb = Resource.ContentsOfURLWithFallback(url=image_link)
         except IndexError:
             continue
 
         if browse_type == "tv" or "season" in title.lower():
-            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
         else:
             oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
 
@@ -103,9 +97,12 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)
-def TVSeason(asin, title, thumb, is_library):
+def TVSeason(asin, title, is_library):
     html = HTML.ElementFromURL(c.PRODUCT_URL % asin)
     episodes = html.xpath(c.EPISODE_BROWSE_PATTERN)
+
+    image_link = html.xpath(c.IMAGE_LINK_PATTERN)[0]
+    thumb = Resource.ContentsOfURLWithFallback(url=image_link)
 
     oc = ObjectContainer(title2=title)
 
