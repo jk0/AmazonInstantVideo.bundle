@@ -75,15 +75,18 @@ def PlayVideo(url):
 
     asin = url.split("/")[5]
     customer_id = re.search(c.CUSTOMER_ID_PATTERN, page).group(1)
-    device_id = customer_id + str(int(time.time() * 1000)) + asin
+    device_id = customer_id + str(int(time.strftime("%Y%m%d")) * 100000) + asin
     swf_url = re.search(c.SWF_URL_PATTERN, page).group(1)
     token = re.search(c.TOKEN_PATTERN, page).group(1)
 
     stream_url = "https://atv-ps.amazon.com/cdp/catalog/GetStreamingUrlSets?deviceTypeID=%s&version=%s&asin=%s&firmware=%s&customerID=%s&token=%s&format=%s&deviceID=%s" % (
             "A13Q6A55DBZB7M", "1", asin, "WIN%2010,0,181,14%20PlugIn", customer_id, token, "json", device_id)
 
-    stream_data = JSON.ObjectFromURL(stream_url)
-    stream_json = stream_data["message"]["body"]["urlSets"]["streamingURLInfoSet"][0]["streamingURLInfo"]
+    try:
+        stream_data = JSON.ObjectFromURL(stream_url, cacheTime=600)
+        stream_json = stream_data["message"]["body"]["urlSets"]["streamingURLInfoSet"][0]["streamingURLInfo"]
+    except KeyError:
+        raise Ex.StreamLimitExceeded
 
     streams = []
     for stream in stream_json:
@@ -93,17 +96,14 @@ def PlayVideo(url):
     # NOTE(jk0): Use the highest bitrate available.
     streams.sort(key=lambda x: x[0], reverse=True)
 
-    rtmp_url = streams[0][1]
-    protocol = rtmp_url.split("//", 1)[1]
-    hostname = protocol.split("/", 1)[0]
-    path = protocol.split("/", 1)[1]
+    rtmp_url = streams[0][1].split("/", 3)
+    hostname = rtmp_url[2]
+    path = rtmp_url[3][9:].split("?", 1)
+    auth = path[1]
+    clip = path[0].replace(".mp4", "")
+    rtmp_stream = "rtmpe://%s:1935/ondemand?%s" % (hostname, auth)
 
-    auth = path.split("ondemand/")[1].split("?")
-    clip = auth[0].replace(".mp4", "")
-
-    rtmp_stream = "rtmpe://%s:1935/ondemand?%s playpath=%s pageurl=%s swfurl=%s swfvfy=true" % (hostname, auth[1], clip, url, swf_url)
-
-    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_stream, clip=clip))
+    return IndirectResponse(VideoClipObject, key=RTMPVideoURL(url=rtmp_stream, clip=clip, swf_url=swf_url))
 
 
 def parse_video_metadata(page):

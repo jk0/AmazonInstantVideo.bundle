@@ -41,13 +41,13 @@ def MainMenu():
 
     if logged_in:
         if is_prime:
-            oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movie"), title="Browse Movies"))
-            oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv"), title="Browse TV"))
+            oc.add(DirectoryObject(key=Callback(BrowseMenu, browse_type="movie"), title="Browse Movies"))
+            oc.add(DirectoryObject(key=Callback(BrowseMenu, browse_type="tv"), title="Browse TV Shows"))
 
-        oc.add(DirectoryObject(key=Callback(LibraryMenu), title="Your Library"))
+        oc.add(DirectoryObject(key=Callback(BrowseMenu, is_library=True), title="Your Library"))
 
         if is_prime:
-            oc.add(DirectoryObject(key=Callback(WatchlistMenu), title="Your Watchlist"))
+            oc.add(DirectoryObject(key=Callback(BrowseMenu, is_watchlist=True), title="Your Watchlist"))
             oc.add(InputDirectoryObject(key=Callback(Search), title="Search", prompt="Search for a Movie or TV Show", thumb=R(c.PLUGIN_ICON_SEARCH)))
 
     oc.add(PrefsObject(title="Preferences"))
@@ -55,83 +55,54 @@ def MainMenu():
     return oc
 
 
-@route("/video/amazoninstantvideo/librarymenu")
-def LibraryMenu():
-    oc = ObjectContainer(title2="Your Library")
-
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movie", is_library=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_library=True), title="TV"))
-
-    return oc
-
-
-@route("/video/amazoninstantvideo/watchlistmenu")
-def WatchlistMenu():
-    oc = ObjectContainer(title2="Your Watchlist")
-
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="movie", is_watchlist=True), title="Movies"))
-    oc.add(DirectoryObject(key=Callback(BrowseMenu, video_type="tv", is_watchlist=True), title="TV"))
-
-    return oc
-
-
 @route("/video/amazoninstantvideo/browsemenu", is_library=bool, is_watchlist=bool)
-def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pagination_url=None):
-    if video_type == "search":
-        title = "Search for '%s'" % query.title()
-    elif video_type == "tv":
-        title = "Browse TV Shows"
-    else:
-        title = "Browse Movies"
-
+def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, query=None, pagination_url=None):
     if query:
+        title = "Search for '%s'" % query.title()
         if not pagination_url:
             # NOTE(jk0): Only build a query URL if we're performing a new
             # search and not using pagination on a previous search.
             query = query.replace(" ", "%20")
             browse_url = c.SEARCH_URL % query
     elif is_library:
-        title = title + " (Library)"
-        browse_url = c.ACCOUNT_URL % ("library", video_type)
+        title = "Your Library"
+        browse_url = c.LIBRARY_URL
     elif is_watchlist:
-        title = title + " (Watchlist)"
-        browse_url = c.ACCOUNT_URL % ("watchlist", video_type)
-    elif video_type == "movie":
+        title = "Your Watchlist"
+        browse_url = c.WATCHLIST_URL
+    elif browse_type == "movie":
+        title = "Browse Movies"
         browse_url = c.MOVIES_URL
     else:
+        title = "Browse TV Shows"
         browse_url = c.TV_URL
 
     if pagination_url:
         browse_url = c.AMAZON_URL + pagination_url
 
     html = HTML.ElementFromURL(browse_url)
-    videos = html.xpath(c.BROWSE_PATTERN)
+    items = html.xpath(c.BROWSE_PATTERN)
 
     oc = ObjectContainer(title2=title)
 
-    for item in videos:
-        is_prime = True if len(item.xpath(c.IS_PRIME_PATTERN)) > 0 else False
-        if is_watchlist and not is_prime:
-            continue
-
+    for item in items:
         try:
             asin = item.xpath(c.ASIN_PATTERN)[0]
             title = item.xpath(c.TITLE_PATTERN)[0].strip()
             image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
+
+            thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
         except IndexError:
             continue
 
-        thumb = Resource.ContentsOfURLWithFallback(url=image_link, fallback=c.PLUGIN_ICON_DEFAULT)
-
-        # FIXME(jk0): This is a terrible solution!
-        if video_type == "tv" or "season" in title.lower():
+        if browse_type == "tv" or "season" in title.lower():
             oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
         else:
             oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
 
     pagination_url = html.xpath(c.PAGINATION_PATTERN)
     if len(pagination_url) > 0:
-        oc.add(NextPageObject(key=Callback(BrowseMenu, video_type=video_type, query=query, pagination_url=pagination_url[0]), title="Next..."))
+        oc.add(NextPageObject(key=Callback(BrowseMenu, browse_type=browse_type, query=query, pagination_url=pagination_url[0]), title="Next..."))
 
     if len(oc) == 0:
         return ObjectContainer(header="No Results", message="No results were found.")
@@ -141,7 +112,7 @@ def BrowseMenu(video_type, is_library=False, is_watchlist=False, query=None, pag
 
 @route("/video/amazoninstantvideo/search")
 def Search(query):
-    return BrowseMenu(video_type="search", query=query)
+    return BrowseMenu(query=query)
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)
