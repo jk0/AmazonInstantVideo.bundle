@@ -97,6 +97,7 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
 def TVSeason(asin, title, is_library):
     page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
     episodes = page.xpath(c.EPISODE_BROWSE_PATTERN)
+
     thumb = common.generate_thumb(page)
 
     oc = ObjectContainer(title2=title)
@@ -105,9 +106,8 @@ def TVSeason(asin, title, is_library):
         if not is_library or common.is_owned(episode):
             try:
                 asin, title, summary = common.parse_episode(episode)
+                oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
             except IndexError:
                 continue
-
-            oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
 
     return oc

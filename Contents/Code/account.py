@@ -16,7 +16,7 @@ c = SharedCodeService.constants
 
 
 def authenticate():
-    params = {
+    values = {
         "action": "sign-in",
         "protocol": "https",
         "email": Prefs["email"],
@@ -24,7 +24,7 @@ def authenticate():
     }
 
     page = HTML.ElementFromURL(c.AMAZON_URL + "/gp/flex/sign-in/select.html",
-                               values=params)
+                               values=values)
 
     Dict["amazon_is_account_prime"] = False
     if page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)[0].endswith("_prmlogo"):
