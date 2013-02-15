@@ -74,19 +74,12 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
 
     for item in items:
         try:
-            asin = item.xpath(c.ASIN_PATTERN)[0]
-            title = item.xpath(c.TITLE_PATTERN)[0].strip()
-            image_link = item.xpath(c.IMAGE_LINK_PATTERN)[0]
-
-            for replacement in c.IMAGE_LINK_REPLACE:
-                image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
-
-            thumb = Resource.ContentsOfURLWithFallback(url=image_link)
+            asin, title, thumb = common.parse_item(item)
         except IndexError:
             continue
 
-        if browse_type == "tv" or common.any(x in title for x in c.SEASON_SYNONYMS):
-            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, thumb=thumb, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
+        if browse_type == "tv" or common.is_season(title):
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title, is_library=is_library), rating_key=asin, title=title, thumb=thumb))
         else:
             oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
 
@@ -101,19 +94,19 @@ def BrowseMenu(is_library=False, is_watchlist=False, browse_type=None, paginatio
 
 
 @route("/video/amazoninstantvideo/tvseason", is_library=bool)
-def TVSeason(asin, title, thumb, is_library):
+def TVSeason(asin, title, is_library):
     page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
     episodes = page.xpath(c.EPISODE_BROWSE_PATTERN)
+    thumb = common.generate_thumb(page)
 
     oc = ObjectContainer(title2=title)
 
     for episode in episodes:
-        is_owned = True if episode.xpath(c.IS_OWNED_PATTERN)[0].strip() == "Owned" else False
-
-        if not is_library or is_owned:
-            asin = episode.xpath(c.EPISODE_ASIN_PATTERN)[0]
-            title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip()
-            summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
+        if not is_library or common.is_owned(episode):
+            try:
+                asin, title, summary = common.parse_episode(episode)
+            except IndexError:
+                continue
 
             oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
 
