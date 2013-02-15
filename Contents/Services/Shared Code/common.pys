@@ -22,7 +22,7 @@ def is_season(title):
 
 
 def is_owned(episode):
-    return episode.xpath(c.IS_OWNED_PATTERN)[0].strip() == "Owned"
+    return len(episode.xpath(c.IS_OWNED_PATTERN)) > 0
 
 
 def generate_thumb(element):

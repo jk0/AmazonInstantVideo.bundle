@@ -32,7 +32,7 @@ TOKEN_PATTERN = "&token=(.*?)&"
 
 IS_ACCOUNT_PRIME_PATTERN = "//div[@id='nav-cross-shop']/a/@href"
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
-IS_OWNED_PATTERN = ".//td[last()-2]/text()"
+IS_OWNED_PATTERN = ".//td[text()='Owned']"
 PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
 
 SEASON_SYNONYMS = ["Season", "Volume"]

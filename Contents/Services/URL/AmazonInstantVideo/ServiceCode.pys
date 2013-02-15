@@ -16,6 +16,7 @@ import datetime
 import re
 import time
 
+import common
 import constants as c
 
 
@@ -25,8 +26,7 @@ def MetadataObjectForURL(url):
 
     title = page.xpath(c.TITLE_PATTERN)[0].strip()
     summary = page.xpath(c.SUMMARY_PATTERN)[0].strip()
-    image_link = page.xpath(c.IMAGE_LINK_PATTERN)[0]
-    thumb = Resource.ContentsOfURLWithFallback(url=image_link)
+    thumb = common.generate_thumb(page)
 
     video_metadata = parse_video_metadata(page)
     episode_metadata = parse_episode_metadata(page, title)
