@@ -1,0 +1,56 @@
+#   Copyright 2013 Josh Kearney
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+import common
+import constants as c
+
+
+def Search(query):
+    search_url = c.SEARCH_URL % query.replace(" ", "%20")
+
+    page = HTML.ElementFromURL(search_url)
+    items = page.xpath(c.BROWSE_PATTERN)
+
+    oc = ObjectContainer(title2="Search for '%s'" % query.title())
+
+    for item in items:
+        try:
+            asin, title, thumb = common.parse_item(item)
+        except IndexError:
+            continue
+
+        if common.is_season(title):
+            oc.add(SeasonObject(key=Callback(TVSeason, asin=asin, title=title), rating_key=asin, title=title, thumb=thumb))
+        else:
+            oc.add(MovieObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, thumb=thumb))
+
+    return oc
+
+
+def TVSeason(asin, title):
+    page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
+    episodes = page.xpath(c.EPISODE_BROWSE_PATTERN)
+    thumb = common.generate_thumb(page)
+
+    oc = ObjectContainer(title2=title)
+
+    for episode in episodes:
+        try:
+            asin, title, summary = common.parse_episode(episode)
+        except IndexError:
+            continue
+
+        oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
+
+    return oc

@@ -1,0 +1,50 @@
+#   Copyright 2013 Josh Kearney
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+import constants as c
+
+
+def is_season(title):
+    for synonym in c.SEASON_SYNONYMS:
+        if synonym in title:
+            return True
+
+
+def is_owned(episode):
+    return episode.xpath(c.IS_OWNED_PATTERN)[0].strip() == "Owned"
+
+
+def generate_thumb(element):
+    image_link = element.xpath(c.IMAGE_LINK_PATTERN)[0]
+
+    for replacement in c.IMAGE_LINK_REPLACE:
+        image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
+
+    return Resource.ContentsOfURLWithFallback(url=image_link)
+
+
+def parse_item(item):
+    asin = item.xpath(c.ASIN_PATTERN)[0]
+    title = item.xpath(c.TITLE_PATTERN)[0].strip()
+    thumb = generate_thumb(item)
+
+    return asin, title, thumb
+
+
+def parse_episode(episode):
+    asin = episode.xpath(c.EPISODE_ASIN_PATTERN)[0]
+    title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip()
+    summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
+
+    return asin, title, summary

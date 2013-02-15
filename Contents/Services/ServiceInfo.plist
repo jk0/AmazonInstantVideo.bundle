@@ -8,12 +8,20 @@
         <dict>
             <key>URLPatterns</key>
             <array>
-                <string>https?://www.amazon.com/gp/product/.+</string>
+                <string>https://www.amazon.com/gp/product/.+</string>
             </array>
             <key>TestURLs</key>
             <array>
-                <string>http://www.amazon.com/gp/product/B000H4QD1O/</string>
+                <string>https://www.amazon.com/gp/product/B000H4QD1O/</string>
             </array>
+        </dict>
+    </dict>
+    <key>Search</key>
+    <dict>
+        <key>AmazonInstantVideo</key>
+        <dict>
+            <key>Identifier</key>
+            <string>com.plexapp.plugins.amazoninstantvideo</string>
         </dict>
     </dict>
     <key>PlexFrameworkFlags</key>

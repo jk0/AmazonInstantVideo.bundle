@@ -13,16 +13,15 @@
 #   limitations under the License.
 
 PLUGIN_TITLE = "Amazon Instant Video"
-PLUGIN_ICON_DEFAULT = "icon-default.png"
-PLUGIN_ICON_SEARCH = "icon-search.png"
-PLUGIN_ICON_PREFS = "icon-prefs.png"
-PLUGIN_ICON_NEXT = "icon-next.png"
-PLUGIN_ART = "art-default.jpg"
 
 AMAZON_URL = "https://www.amazon.com"
 PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 
-ACCOUNT_URL = AMAZON_URL + "/gp/video/%s/%s?show=all"
+IMAGE_LINK_REPLACE = ["._SS160_.jpg", "._AA160_.jpg", "._SX140_CR0,0,140,105_.jpg", "._CR0,12,333,476_SP140,200,50,C,0,0,0__.jpg"]
+IMAGE_LINK_REPLACE_WITH = ".jpg"
+
+LIBRARY_URL = AMAZON_URL + "/gp/video/library?show=all"
+WATCHLIST_URL = AMAZON_URL + "/gp/video/watchlist/prime?show=all"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955011&keywords=%s"
@@ -33,9 +32,10 @@ TOKEN_PATTERN = "&token=(.*?)&"
 
 IS_ACCOUNT_PRIME_PATTERN = "//div[@id='nav-cross-shop']/a/@href"
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
-IS_PRIME_PATTERN = ".//div[@class='meta-info']/div/p/span[@class='prime-logo']"
 IS_OWNED_PATTERN = ".//td[last()-2]/text()"
 PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
+
+SEASON_SYNONYMS = ["Season", "Volume"]
 
 ASIN_PATTERN = ".//@asin | .//div[@class='meta-info']/p/a/@data-asin | .//@name"
 TITLE_PATTERN = ".//div[@class='title']/a/text() | .//div[@class='hover-hook']/a/img/@alt | .//h3[@class='newaps']/a/span/text() | .//div[@class='data']/h3/a/text() | .//div[@id='prod-details']/h1/text()"
