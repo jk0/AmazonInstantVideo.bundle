@@ -44,7 +44,7 @@ def parse_item(item):
 
 def parse_episode(episode):
     asin = episode.xpath(c.EPISODE_ASIN_PATTERN)[0]
-    title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip()
+    index, title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip().split(". ", 1)
     summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
 
-    return asin, title, summary
+    return asin, int(index), title, summary
