@@ -105,8 +105,8 @@ def TVSeason(asin, title, is_library):
     for episode in episodes:
         if not is_library or common.is_owned(episode):
             try:
-                asin, title, summary = common.parse_episode(episode)
-                oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
+                asin, index, title, summary = common.parse_episode(episode)
+                oc.add(EpisodeObject(url=c.PRODUCT_URL % asin, index=index, source_title=c.PLUGIN_TITLE, title=title, summary=summary, thumb=thumb))
             except IndexError:
                 continue
 
