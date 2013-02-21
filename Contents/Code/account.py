@@ -27,7 +27,7 @@ def authenticate():
                                values=values)
 
     Dict["amazon_is_account_prime"] = False
-    if page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)[0].endswith("_prmlogo"):
+    if len(page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)) > 0:
         Dict["amazon_is_account_prime"] = True
 
     Dict.Save()
