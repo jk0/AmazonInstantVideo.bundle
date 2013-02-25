@@ -16,6 +16,9 @@ import common
 import constants as c
 
 
+common.set_user_agent()
+
+
 def Search(query):
     search_url = c.SEARCH_URL % query.replace(" ", "%20")
 
