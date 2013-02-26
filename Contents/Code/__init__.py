@@ -20,6 +20,8 @@ c = SharedCodeService.constants
 
 
 def Start():
+    common.set_user_agent()
+
     ObjectContainer.title1 = c.PLUGIN_TITLE
 
 

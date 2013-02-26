@@ -34,6 +34,11 @@ def generate_thumb(element):
     return Resource.ContentsOfURLWithFallback(url=image_link)
 
 
+def set_user_agent():
+    user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.99 Safari/537.22"
+    HTTP.Headers["User-Agent"] = user_agent
+
+
 def parse_item(item):
     asin = item.xpath(c.ASIN_PATTERN)[0]
     title = item.xpath(c.TITLE_PATTERN)[0].strip()

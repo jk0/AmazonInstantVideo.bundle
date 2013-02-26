@@ -20,6 +20,9 @@ import common
 import constants as c
 
 
+common.set_user_agent()
+
+
 def MetadataObjectForURL(url):
     asin = url.split("/")[5]
     page = HTML.ElementFromURL(c.PRODUCT_URL % asin)
