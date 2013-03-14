@@ -15,6 +15,7 @@
 PLUGIN_TITLE = "Amazon Instant Video"
 
 AMAZON_URL = "https://www.amazon.com"
+AUTH_URL = AMAZON_URL + "/gp/flex/sign-in/select.html"
 PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 
 IMAGE_LINK_REPLACE = ["._SS160_.jpg", "._AA160_.jpg", "._SX140_CR0,0,140,105_.jpg", "._CR0,12,333,476_SP140,200,50,C,0,0,0__.jpg"]
