@@ -28,15 +28,15 @@ def Start():
 
 @handler("/video/amazoninstantvideo", c.PLUGIN_TITLE)
 def MainMenu():
+    oc = ObjectContainer(no_cache=True)
+
     logged_in = account.logged_in()
     if not logged_in:
         logged_in = account.authenticate()
 
-    is_prime = account.is_prime()
-
-    oc = ObjectContainer()
-
     if logged_in:
+        is_prime = account.is_prime()
+
         if is_prime:
             oc.add(DirectoryObject(key=Callback(BrowseMenu, browse_type="movie"), title="Browse Movies"))
             oc.add(DirectoryObject(key=Callback(BrowseMenu, browse_type="tv"), title="Browse TV Shows"))
