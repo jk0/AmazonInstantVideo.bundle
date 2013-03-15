@@ -15,6 +15,17 @@
 import constants as c
 
 
+def authenticate():
+    values = {
+        "action": "sign-in",
+        "protocol": "https",
+        "email": Prefs["email"],
+        "password": Prefs["password"]
+    }
+
+    return HTML.ElementFromURL(c.AUTH_URL, values=values)
+
+
 def is_season(title):
     for synonym in c.SEASON_SYNONYMS:
         if synonym in title:

@@ -74,6 +74,10 @@ def MediaObjectsForURL(url):
 
 @indirect
 def PlayVideo(url):
+    # NOTE(jk0): We need to authenticate here since service code doesn't have
+    # access to the plugin's cookies.
+    common.authenticate()
+
     page = HTTP.Request(url, immediate=True).content
 
     asin = url.split("/")[5]

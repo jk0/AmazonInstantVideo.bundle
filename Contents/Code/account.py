@@ -12,19 +12,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+common = SharedCodeService.common
 c = SharedCodeService.constants
 
 
 def authenticate():
-    values = {
-        "action": "sign-in",
-        "protocol": "https",
-        "email": Prefs["email"],
-        "password": Prefs["password"]
-    }
-
-    page = HTML.ElementFromURL(c.AMAZON_URL + "/gp/flex/sign-in/select.html",
-                               values=values)
+    page = common.authenticate()
 
     Dict["amazon_is_account_prime"] = False
     if len(page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)) > 0:
