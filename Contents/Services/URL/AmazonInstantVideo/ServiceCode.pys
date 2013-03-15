@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import datetime
 import re
 import time
 
@@ -144,8 +143,7 @@ def parse_episode_metadata(page, title):
         episode_number, episode_name = episode_info[1].split("Ep. ", 1)[1].split(" ", 1)
         episode_number = int(episode_number)
 
-        air_date = page.xpath(c.AIRDATE_PATTERN)[0].strip().split(" ", 3)
-        air_date = datetime.datetime.strptime(" ".join(air_date), "%B %d, %Y")
+        air_date = Datetime.ParseDate(page.xpath(c.AIRDATE_PATTERN)[0])
     except (IndexError, ValueError):
         return None
 
