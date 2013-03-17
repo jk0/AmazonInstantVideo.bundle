@@ -17,14 +17,7 @@ c = SharedCodeService.constants
 
 
 def authenticate():
-    page = common.authenticate()
-
-    Dict["amazon_is_account_prime"] = False
-    if len(page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)) > 0:
-        Dict["amazon_is_account_prime"] = True
-
-    Dict.Save()
-
+    common.authenticate()
     return logged_in()
 
 
@@ -42,4 +35,8 @@ def logged_in():
 
 
 def is_prime():
-    return Dict["amazon_is_account_prime"]
+    # NOTE(jk0): We don't really need to authenticate again here, but are just
+    # using this as a helper to get a copy of the current prime pattern match
+    # to avoid a race condition.
+    page = common.authenticate()
+    return len(page.xpath(c.IS_ACCOUNT_PRIME_PATTERN)) > 0
