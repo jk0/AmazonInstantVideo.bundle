@@ -42,7 +42,7 @@ def generate_thumb(element):
     for replacement in c.IMAGE_LINK_REPLACE:
         image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
 
-    return Resource.ContentsOfURLWithFallback(url=image_link)
+    return image_link
 
 
 def set_user_agent():
