@@ -22,7 +22,7 @@ IMAGE_LINK_REPLACE = ["._SS160_.jpg", "._AA160_.jpg", "._SX140_CR0,0,140,105_.jp
 IMAGE_LINK_REPLACE_WITH = ".jpg"
 
 LIBRARY_URL = AMAZON_URL + "/gp/video/library?show=all"
-WATCHLIST_URL = AMAZON_URL + "/gp/video/watchlist/prime?show=all"
+WATCHLIST_URL = AMAZON_URL + "/gp/video/watchlist/prime?show=all&sort=TITLE"
 MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
 TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955011&keywords=%s"
