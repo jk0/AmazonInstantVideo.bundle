@@ -24,9 +24,5 @@
             <string>com.plexapp.plugins.amazoninstantvideo</string>
         </dict>
     </dict>
-    <key>PlexFrameworkFlags</key>
-    <array>
-        <string>UseRealRTMP</string>
-    </array>
 </dict>
 </plist>
