@@ -31,8 +31,8 @@
             </condition>
             <action>
                 <pause time="500" />
-                <run script="document.getElementsByName('email')[0].value='{$username}'" />
-                <run script="document.getElementsByName('password')[0].value='{$password}'" />
+                <run script="document.getElementsByName('email')[0].value='${email}'" />
+                <run script="document.getElementsByName('password')[0].value='${password}'" />
                 <run script="document.forms[0].submit()" />
                 <pause time="500" />
                 <goto state="reload" />
