@@ -19,13 +19,10 @@ AUTH_URL = AMAZON_URL + "/gp/flex/sign-in/select.html"
 PRODUCT_URL = AMAZON_URL + "/gp/product/%s/"
 MINI_PLAYER_URL = "http://www.amazon.com/gp/video/streaming/mini-mode.html?asin=%s"
 
-IMAGE_LINK_REPLACE = ["._SS160_.jpg", "._AA160_.jpg", "._SX140_CR0,0,140,105_.jpg", "._CR0,12,333,476_SP140,200,50,C,0,0,0__.jpg"]
-IMAGE_LINK_REPLACE_WITH = ".jpg"
-
 LIBRARY_URL = AMAZON_URL + "/gp/video/library?show=all"
 WATCHLIST_URL = AMAZON_URL + "/gp/video/watchlist/prime?show=all&sort=TITLE"
-MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011"
-TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011"
+MOVIES_URL = AMAZON_URL + "/s/ref=PIVHPBB_Categories_MostPopular?rh=n%3A2858905011%2Cp_85%3A2470955011&lo=none"
+TV_URL = AMAZON_URL + "/s/ref=lp_2864549011_nr_p_85_0?rh=n%3A2864549011%2Cp_85%3A2470955011&lo=none"
 SEARCH_URL = AMAZON_URL + "/s/ref=sr_nr_p_85_0?rh=n:2858778011,k:pi,p_85:2470955011&keywords=%s"
 
 CUSTOMER_ID_PATTERN = "&customer=(.*?)&"
@@ -34,7 +31,7 @@ TOKEN_PATTERN = "&token=(.*?)&"
 
 IS_ACCOUNT_PRIME_PATTERN = "//div[@id='nav-cross-shop']/a[contains(@href, '_prmlogo')]"
 BROWSE_PATTERN = "//div[contains(@id, 'result_')] | //div[@class='lib-item'] | //div[@class='innerItem']"
-IS_OWNED_PATTERN = ".//td[text()='Owned']"
+IS_OWNED_PATTERN = ".//td[@class='price-or-status']/div[text()='Owned']"
 PAGINATION_PATTERN = "//div[@class='page-nums']/a[last()]/@href | //a[@id='pagnNextLink']/@href"
 
 SEASON_SYNONYMS = ["Season", "Volume"]

@@ -37,12 +37,11 @@ def is_owned(episode):
 
 
 def generate_thumb(element):
-    image_link = element.xpath(c.IMAGE_LINK_PATTERN)[0]
+    image_link = element.xpath(c.IMAGE_LINK_PATTERN)[0].split(".")
 
-    for replacement in c.IMAGE_LINK_REPLACE:
-        image_link = image_link.replace(replacement, c.IMAGE_LINK_REPLACE_WITH)
+    del image_link[-2]
 
-    return image_link
+    return ".".join(image_link)
 
 
 def set_user_agent():
@@ -62,5 +61,7 @@ def parse_episode(episode):
     asin = episode.xpath(c.EPISODE_ASIN_PATTERN)[0]
     index, title = episode.xpath(c.EPISODE_TITLE_PATTERN)[0].strip().split(". ", 1)
     summary = episode.xpath(c.EPISODE_SUMMARY_PATTERN)[0].strip()
+
+    index = 0 if not index else index
 
     return asin, int(index), title, summary
